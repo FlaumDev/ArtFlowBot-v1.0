@@ -144,7 +144,7 @@ def callback_message(callback):
             callback.message.chat.id,
             callback.message.message_id, reply_markup = apply_menu())
     elif callback.data == 'rules':
-        with open('ArtFlowBit/Artdocuments/ПОЛОЖЕНИЕ СОДРУЖЕСТВО ТАЛАНТОВ.docx', 'rb') as file:
+        with open('Artdocuments/ПОЛОЖЕНИЕ СОДРУЖЕСТВО ТАЛАНТОВ.docx', 'rb') as file:
             bot.send_document(
                 callback.message.chat.id,
                 file,
