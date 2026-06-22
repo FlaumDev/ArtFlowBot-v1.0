@@ -1,0 +1,21 @@
+import telebot
+from telebot import types
+from loader import bot
+from keyboards import main_menu
+
+
+
+@bot.message_handler(commands=['start', 'info'])
+def main(message):
+
+
+    bot.send_message(message.chat.id, '''👋 Добро пожаловать в ArtFlow!
+
+🎨 Здесь вы можете подать заявку на участие в конкурсах, ознакомиться с положениями, узнать стоимость участия и получить ответы на популярные вопросы.
+
+🏆 В настоящее время открыта регистрация на международные конкурсы по различным направлениям искусства:
+• Хореография
+• Вокал
+• Инструментальное творчество
+
+👇 Выберите интересующий вас раздел в меню ниже:''', reply_markup=main_menu())

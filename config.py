@@ -1,0 +1,3 @@
+TOKEN = "8967037328:AAGxTvbiefLHhgOvBX1RqIDzdiXhsiz3nfw"
+DATABASE = "ArtFlow.db"
+ADMIN_ID = 123456789
