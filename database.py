@@ -1,6 +1,8 @@
 import sqlite3
-from config import DATABASE
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
+DATABASE = os.getenv("DATABASE")
 def get_connection():
     conn = sqlite3.connect(DATABASE)
     conn.execute("PRAGMA foreign_keys = ON")
