@@ -1,5 +1,3 @@
-import telebot
-from telebot import types
 from loader import bot
 from keyboards import main_menu
 

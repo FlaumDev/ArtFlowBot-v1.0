@@ -1,2 +1,5 @@
 telebot
 dotenv
+PyTelegramBotAPI
+python-dotenv
+psycopg2-binary
