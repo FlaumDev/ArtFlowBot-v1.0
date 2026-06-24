@@ -64,6 +64,7 @@ def create_tables():
                 ''')
 
     conn.commit()
+    cur.close()
     conn.close()
 
 
@@ -76,9 +77,11 @@ id, city, name_team, status
 FROM
 ArtFlow_bid
 WHERE
-telegram_id = %s''',
+telegram_id = %s
+                ORDER BY id DESC''',
                 (telegram_id,))
 
     requests = cur.fetchall()
+    cur.close()
     conn.close()
     return requests

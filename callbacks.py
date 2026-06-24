@@ -1,4 +1,5 @@
 from telebot import types
+import psycopg2
 from loader import  bot
 from storage import user_data
 from registration import end_registration, performance_time, city
