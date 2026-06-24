@@ -1,5 +1,4 @@
 from telebot import types
-import psycopg2
 from loader import  bot
 from storage import user_data
 from registration import end_registration, performance_time, city
@@ -195,6 +194,11 @@ def callback_message(callback):
 
 
     elif callback.data  == 'confirm_reg':
+        if callback.message.chat.id not in user_data:
+            bot.send_message(
+                callback.message.chat.id, "❌ Данные заявки не найдены. Пожалуйста, заполните заявку заново."
+            )
+            return
         data = user_data[callback.message.chat.id]
 
         """ conn = sqlite3.connect('ArtFlow.db')
@@ -207,6 +211,7 @@ def callback_message(callback):
         cur.execute(
             '''
             INSERT INTO ArtFlow_bid (
+                telegram_id,
                 city,
                 name_team,
                 number_name,
@@ -218,9 +223,10 @@ def callback_message(callback):
                 WhatsApp_number,
                 email
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ''',
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id''',
             (
+                callback.message.chat.id,
                 data['city'],
                 data['team'],
                 data['name'],
@@ -233,7 +239,11 @@ def callback_message(callback):
                 data['email']
             )
         )
-        bid_id = cur.lastrowid
+
+        bid_id = cur.fetchone()[0]
+
+
+
         for participant in data['participants']:
 
             cur.execute(
@@ -253,10 +263,8 @@ def callback_message(callback):
         cur.close()
         conn.close()
 
-        data['telegram_id'] = callback.message.chat.id
-        data['status'] = 'Новая'
-
         end_registration(callback.message)
+        del user_data[callback.message.chat.id]
 
     elif callback.data == "my_requests":
 
@@ -277,9 +285,9 @@ def callback_message(callback):
 
 ID: {request[0]}
 
-Город: {request[2]}
+Город: {request[1]}
 
-Коллектив: {request[3]}
+Коллектив: {request[2]}
 
-Статус: {request[12]}""", reply_markup = request_navigation(callback.message.chat.id, requests)
+Статус: {request[3]}""", reply_markup = request_navigation(callback.message.chat.id, requests)
         )
