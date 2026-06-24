@@ -217,7 +217,7 @@ def callback_message(callback):
                 WhatsApp_number,
                 email
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''',
             (
                 data['city'],
@@ -241,7 +241,7 @@ def callback_message(callback):
                 bid_id,
                 participant_name
                 )
-                VALUES (?, ?)
+                VALUES (%s, %s)
                 """,
                 (
                     bid_id,

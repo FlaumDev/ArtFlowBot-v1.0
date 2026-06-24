@@ -15,7 +15,7 @@ def get_connection():
         host=DB_HOST,
         database=DB_NAME,
         user=DB_USER,
-        password=,DB_PASSWORD,
+        password=DB_PASSWORD,
         port=DB_PORT
     )
 
@@ -29,8 +29,8 @@ def create_tables():
                 CREATE TABLE IF NOT EXISTS ArtFlow_bid
                 (
                     id
-                    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    telegram_id INTEGER,
+                    SERIAL PRIMARY KEY,
+                    telegram_id BIGINT,
                     city TEXT,
                     name_team TEXT,
                     number_name TEXT,
@@ -49,10 +49,7 @@ def create_tables():
                 CREATE TABLE IF NOT EXISTS participants
                 (
                     id
-                    INTEGER
-                    PRIMARY
-                    KEY
-                    AUTOINCREMENT,
+                    SERIAL PRIMARY KEY,
                     bid_id
                     INTEGER,
                     participant_name
@@ -79,7 +76,7 @@ id, city, name_team, status
 FROM
 ArtFlow_bid
 WHERE
-telegram_id = ?''',
+telegram_id = %s''',
                 (telegram_id,))
 
     requests = cur.fetchall()
