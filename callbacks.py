@@ -289,5 +289,6 @@ ID: {request[0]}
 
 Коллектив: {request[2]}
 
-Статус: {request[3]}""", reply_markup = request_navigation(callback.message.chat.id, requests)
+Статус: {request[3]}""", reply_markup = request_navigation(1, len(requests)
+        )
         )
