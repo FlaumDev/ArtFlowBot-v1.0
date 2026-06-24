@@ -281,15 +281,21 @@ def callback_message(callback):
         request = requests[0]
         bot.send_message(
                 callback.message.chat.id,
-                f"""📋 Ваша заявка
+                f"""📋 Заявка №{request[0]}
 
-ID: {request[0]}
+📊 Статус: {request[12]}
 
-Город: {request[1]}
-
-Коллектив: {request[2]}
-
-Статус: {request[3]}""", reply_markup = request_navigation(1, len(requests)
+🏙 Город: {request[2]}
+🏫 Коллектив: {request[3]}
+🎵 Номер: {request[4]}
+🎭 Жанр: {request[5]}
+👥 Участников: {request[6]}
+🎂 Возрастная категория: {request[7]}        
+⏱️ Хронометраж {request[8]}
+👨‍🏫 Руководитель: {request[9]}
+📞 WhatsApp: {request[10]}
+📧 E-mail: {request[11]}        
+    """, reply_markup = request_navigation(1, len(requests)
         )
         )
     elif callback.data.startswith("request_page_"):
@@ -300,16 +306,20 @@ ID: {request[0]}
 
         request = requests[page - 1]
         bot.edit_message_text(
-            f"""📋 Ваша заявка
+            f"""📋 Заявка №{request[0]}
 
-ID: {request[0]}
+📊 Статус: {request[12]}
 
-Город: {request[1]}
-
-Коллектив: {request[2]}
-
-Статус: {request[3]}""", callback.message.chat.id,
-            callback.message.message_id,
-            reply_markup = request_navigation(page, len(requests)
+🏙 Город: {request[2]}
+🏫 Коллектив: {request[3]}
+🎵 Номер: {request[4]}
+🎭 Жанр: {request[5]}
+👥 Участников: {request[6]}
+🎂 Возрастная категория: {request[7]}        
+⏱️ Хронометраж {request[8]}
+👨‍🏫 Руководитель: {request[9]}
+📞 WhatsApp: {request[10]}
+📧 E-mail: {request[11]}        
+    """, reply_markup = request_navigation(page, len(requests)
         )
         )

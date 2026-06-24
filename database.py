@@ -73,7 +73,7 @@ def get_user_requests(telegram_id):
     cur = conn.cursor()
     cur.execute('''
 SELECT
-id, city, name_team, status
+*
 FROM
 ArtFlow_bid
 WHERE
