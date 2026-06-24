@@ -3,7 +3,7 @@ from loader import  bot
 from storage import user_data
 from registration import end_registration, performance_time, city
 from keyboards import competition_menu, back_to_info_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation
-from database import get_user_requests
+from database import get_user_requests, get_participants
 
 
 
@@ -279,6 +279,10 @@ def callback_message(callback):
             )
             return
         request = requests[0]
+        participants = get_participants(request[0])
+        participants_text = "\n".join(f"•{participant[0]}"
+                                      for participant in participants
+                                      )
         bot.send_message(
                 callback.message.chat.id,
                 f"""📋 Заявка №{request[0]}
@@ -293,6 +297,7 @@ def callback_message(callback):
 🎂 Возрастная категория: {request[7]}        
 ⏱️ Хронометраж {request[8]}
 👨‍🏫 Руководитель: {request[9]}
+👥 Участники: {participants_text}
 📞 WhatsApp: {request[10]}
 📧 E-mail: {request[11]}        
     """, reply_markup = request_navigation(1, len(requests)
@@ -314,12 +319,14 @@ def callback_message(callback):
 🏫 Коллектив: {request[3]}
 🎵 Номер: {request[4]}
 🎭 Жанр: {request[5]}
-👥 Участников: {request[6]}
+👥 Участников: {request[6]} чел.
 🎂 Возрастная категория: {request[7]}        
-⏱️ Хронометраж {request[8]}
+⏱️ Хронометраж {request[8]} мин.
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
 📧 E-mail: {request[11]}        
-    """, reply_markup = request_navigation(page, len(requests)
+    """,    callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup = request_navigation(page, len(requests)
         )
-        )
+    )

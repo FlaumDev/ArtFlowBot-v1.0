@@ -141,7 +141,7 @@ def performance_time(message):
     try:
         user_data[user_id]["performance_time"] = int(message.text.strip())
     except ValueError:
-        bot.semd_message(message.chat.id, "❌ Ошибка. Введите время числом")
+        bot.send_message(message.chat.id, "❌ Ошибка. Введите время числом")
 
     bot.send_message(message.chat.id, "👤 Шаг 8 из 12\nВведите ФИО руководителя:")
     bot.register_next_step_handler(message, SFP_supervisor)

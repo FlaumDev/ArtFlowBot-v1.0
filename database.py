@@ -78,10 +78,24 @@ FROM
 ArtFlow_bid
 WHERE
 telegram_id = %s
-                ORDER BY id DESC''',
+                ORDER BY id ASC''',
                 (telegram_id,))
 
     requests = cur.fetchall()
     cur.close()
     conn.close()
     return requests
+def get_participants(bid_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT participant_name FROM participants
+        WHERE bid_id = %s
+    ''', (bid_id,))
+
+    participants = cur.fetchall()
+
+    cur.close()
+    conn.close()
+    return participants
