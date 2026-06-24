@@ -292,3 +292,24 @@ ID: {request[0]}
 Статус: {request[3]}""", reply_markup = request_navigation(1, len(requests)
         )
         )
+    elif callback.data.startswith("request_page_"):
+
+        page = int(callback.data.split("_")[-1])
+
+        requests  = get_user_requests(callback.message.chat.id)
+
+        request = requests[page - 1]
+        bot.edit_message_text(
+            f"""📋 Ваша заявка
+
+ID: {request[0]}
+
+Город: {request[1]}
+
+Коллектив: {request[2]}
+
+Статус: {request[3]}""", callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup = request_navigation(page, len(requests)
+        )
+        )
