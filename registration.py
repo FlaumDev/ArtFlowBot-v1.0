@@ -3,25 +3,21 @@ from telebot import types
 from loader import bot
 from storage import user_data
 from keyboards import end_registration_menu, exit_registration_menu, age_menu
-
+import re
 
 
 def city(message):
     user_id = message.chat.id
 
-    try:
-        user_data[user_id]["city"] = str(message.text.strip())
-
-    except ValueError:
+    if not message.text:
         bot.send_message(
-            message.chat.id,
-            "❌ Введите город текстом"
+            message.chat.id, "❌ Введите текстом"
         )
-        bot.register_next_step_handler(
-            message,
-            city
-        )
+
+        bot.register_next_step_handler(message, city)
         return
+
+    user_data[user_id]["city"] = message.text.strip()
 
     bot.send_message(
         message.chat.id, "🏫 Шаг 2 из 12\nВведите название коллектива:"
@@ -35,6 +31,14 @@ def name_team(message):
 
     user_id = message.chat.id
 
+    if not message.text:
+        bot.send_message(
+            message.chat.id, "❌ Введите текстом"
+        )
+
+        bot.register_next_step_handler(message, name_team)
+        return
+
     user_data[user_id]["team"] = message.text.strip()
 
     bot.send_message(message.chat.id,
@@ -47,6 +51,14 @@ def number_name(message):
 
     user_id = message.chat.id
 
+    if not message.text:
+        bot.send_message(
+            message.chat.id, "❌ Введите текстом"
+        )
+
+        bot.register_next_step_handler(message, number_name)
+        return
+
     user_data[user_id]["name"] = message.text.strip()
 
     bot.send_message(message.chat.id, "🎭 Шаг 4 из 12\nВведите жанр номера:")
@@ -57,6 +69,14 @@ def number_name(message):
 def number_genre(message):
 
     user_id = message.chat.id
+
+    if not message.text:
+        bot.send_message(
+            message.chat.id, "❌ Введите текстом"
+        )
+
+        bot.register_next_step_handler(message, number_genre)
+        return
 
     user_data[user_id]["genre"] = message.text.strip()
 
@@ -106,6 +126,14 @@ def number_of_participants(message):
 def add_participant(message):
 
     user_id = message.chat.id
+
+    if not message.text:
+        bot.send_message(
+            message.chat.id, "❌ Введите текстом"
+        )
+
+        bot.register_next_step_handler(message, city)
+        return
 
     user_data[user_id]["participants"].append(
         message.text.strip()
@@ -166,6 +194,14 @@ def SFP_supervisor(message):
 
     user_id = message.chat.id
 
+    if not message.text:
+        bot.send_message(
+            message.chat.id, "❌ Введите текстом"
+        )
+
+        bot.register_next_step_handler(message, SFP_supervisor)
+        return
+
     user_data[user_id]["supervisor"] = message.text.strip()
 
     bot.send_message(message.chat.id, "📞 Шаг 9 из 12\nВведите контактный номер WhatsApp")
@@ -177,7 +213,25 @@ def WhatsApp_number(message):
 
     user_id = message.chat.id
 
-    user_data[user_id]["WhatsApp"] = message.text.strip()
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id, "❌ Пожалуйста, введите номер телефона сообщением"
+        )
+        bot.register_next_step_handler(message, WhatsApp_number)
+        return
+
+    phone = re.sub(r"[^\d+]", "", message.text)
+
+    pattern = r"^\+?[0-9]{10,15}$"
+
+    if not re.match(pattern, phone):
+        bot.send_message(
+            message.chat.id, "❌ Неверный формат номера\nПримеры: +77052510210\n87052510210"
+        )
+        bot.register_next_step_handler(message, WhatsApp_number)
+        return
+
+    user_data[user_id]["WhatsApp"] = phone
 
     bot.send_message(message.chat.id, "📨 Шаг 10 из 12\nВведите ваш e-mail")
     bot.register_next_step_handler(message, email)
@@ -187,6 +241,23 @@ def WhatsApp_number(message):
 def email(message):
 
     user_id = message.chat.id
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id, "❌ Введите e-mail текстом"
+        )
+        bot.register_next_step_handler(message, email)
+        return
+    email.text = message.text.strip()
+
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+
+    if not re.match(pattern, email.text):
+        bot.send_message(
+            message.chat.id, "❌ Некорректный e-mail.\nПример: example@gmail.com"
+        )
+        bot.register_next_step_handler(message, email)
+        return
 
     user_data[user_id]["email"] = message.text.strip()
 
