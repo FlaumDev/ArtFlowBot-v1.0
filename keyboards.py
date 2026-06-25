@@ -202,3 +202,24 @@ def request_navigation(current, total):
     )
 
     return markup
+
+def contact_menu():
+    markup = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa')
+    btn2 = types.InlineKeyboardButton('Telegram', callback = 'tg')
+    btn3 = types.InlineKeyboardButton('Почта', callback = 'em')
+    markup.row(btn2, btn3)
+
+def faq_menu():
+    markup = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton('', callback_data = 'q1')
+    btn2 = types.InlineKeyboardButton('', callback_data = 'q2')
+    btn3 = types.InlineKeyboardButton('', callback_data = 'q3')
+    btn4 = types.InlineKeyboardButton('', callback_data = 'q4')
+    btn5 = types.InlineKeyboardButton('', callback_data = 'q5')
+    btn6 = types.InlineKeyboardButton('', callback_data = 'q6')
+    btn7 = types.InlineKeyboardButton('', callback_data = 'q7')
+    btn8 = types.InlineKeyboardButton('', callback_data = 'q8')
+    btn9 = types.InlineKeyboardButton('', callback_data = 'q9')
+    btn10 = types.InlineKeyboardButton('', callback_data = 'q10')
+

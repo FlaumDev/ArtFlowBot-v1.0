@@ -9,7 +9,19 @@ from keyboards import end_registration_menu, exit_registration_menu, age_menu
 def city(message):
     user_id = message.chat.id
 
-    user_data[user_id]["city"] = message.text.strip()
+    try:
+        user_data[user_id]["city"] = str(message.text.strip())
+
+    except ValueError:
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите город текстом"
+        )
+        bot.register_next_step_handler(
+            message,
+            city
+        )
+        return
 
     bot.send_message(
         message.chat.id, "🏫 Шаг 2 из 12\nВведите название коллектива:"
@@ -143,6 +155,7 @@ def performance_time(message):
     except ValueError:
         bot.send_message(message.chat.id, "❌ Ошибка. Введите время числом")
         bot.register_next_step_handler(message, performance_time)
+        return
 
     bot.send_message(message.chat.id, "👤 Шаг 8 из 12\nВведите ФИО руководителя:")
     bot.register_next_step_handler(message, SFP_supervisor)

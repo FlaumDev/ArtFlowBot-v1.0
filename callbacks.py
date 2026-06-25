@@ -2,7 +2,7 @@ from telebot import types
 from loader import  bot
 from storage import user_data
 from registration import end_registration, performance_time, city
-from keyboards import competition_menu, back_to_info_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation
+from keyboards import competition_menu, back_to_info_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu, faq_menu
 from database import get_user_requests, get_participants
 
 
@@ -330,3 +330,21 @@ def callback_message(callback):
             reply_markup = request_navigation(page, len(requests)
         )
     )
+
+    elif callback.data == "contact":
+        bot.edit_message_text(
+            """""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup = contact_menu()
+        )
+
+    elif callback.data == "faq":
+        bot.edit_message_text(
+            """""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup = faq_menu()
+        )
+
+
