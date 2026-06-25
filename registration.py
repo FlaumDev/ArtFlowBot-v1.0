@@ -9,7 +9,7 @@ import re
 def city(message):
     user_id = message.chat.id
 
-    if not message.text:
+    if message.content_type != "text":
         bot.send_message(
             message.chat.id, "❌ Введите текстом"
         )
@@ -31,7 +31,7 @@ def name_team(message):
 
     user_id = message.chat.id
 
-    if not message.text:
+    if message.content_type != "text":
         bot.send_message(
             message.chat.id, "❌ Введите текстом"
         )
@@ -51,7 +51,7 @@ def number_name(message):
 
     user_id = message.chat.id
 
-    if not message.text:
+    if message.content_type != "text":
         bot.send_message(
             message.chat.id, "❌ Введите текстом"
         )
@@ -70,7 +70,7 @@ def number_genre(message):
 
     user_id = message.chat.id
 
-    if not message.text:
+    if message.content_type != "text":
         bot.send_message(
             message.chat.id, "❌ Введите текстом"
         )
@@ -91,6 +91,8 @@ def number_of_participants(message):
 
     try:
         count = int(message.text)
+        if count <= 0:
+            raise ValueError
 
     except ValueError:
         bot.send_message(
@@ -132,7 +134,7 @@ def add_participant(message):
             message.chat.id, "❌ Введите текстом"
         )
 
-        bot.register_next_step_handler(message, city)
+        bot.register_next_step_handler(message, add_participant)
         return
 
     user_data[user_id]["participants"].append(
@@ -179,11 +181,15 @@ def performance_time(message):
     user_id = message.chat.id
 
     try:
-        user_data[user_id]["performance_time"] = int(message.text.strip())
+        time = int(message.text)
+        if time <= 0:
+            raise ValueError
+
     except ValueError:
-        bot.send_message(message.chat.id, "❌ Ошибка. Введите время числом")
+        bot.send_message(message.chat.id, "❌ Ошибка. Время выступления числом больше 0")
         bot.register_next_step_handler(message, performance_time)
         return
+    user_data[user_id]["performance_time"] = time
 
     bot.send_message(message.chat.id, "👤 Шаг 8 из 12\nВведите ФИО руководителя:")
     bot.register_next_step_handler(message, SFP_supervisor)
@@ -194,7 +200,7 @@ def SFP_supervisor(message):
 
     user_id = message.chat.id
 
-    if not message.text:
+    if message.content_type != "text":
         bot.send_message(
             message.chat.id, "❌ Введите текстом"
         )
@@ -248,18 +254,18 @@ def email(message):
         )
         bot.register_next_step_handler(message, email)
         return
-    email.text = message.text.strip()
+    email_text = message.text.strip()
 
     pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
 
-    if not re.match(pattern, email.text):
+    if not re.match(pattern, email_text):
         bot.send_message(
             message.chat.id, "❌ Некорректный e-mail.\nПример: example@gmail.com"
         )
         bot.register_next_step_handler(message, email)
         return
 
-    user_data[user_id]["email"] = message.text.strip()
+    user_data[user_id]["email"] = email_text
 
     exit_registration(message)
 
