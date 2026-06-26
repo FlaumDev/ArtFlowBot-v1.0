@@ -2,7 +2,7 @@ from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
-from keyboards import competition_menu, back_to_info_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu, faq_menu
+from keyboards import competition_menu, contact_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants
 
 
@@ -279,9 +279,10 @@ def callback_message(callback):
             return
         request = requests[0]
         participants = get_participants(request[0])
-        participants_text = "\n".join(f"•{participant[0]}"
-                                      for participant in participants
-                                      )
+        participants_text = "\n".join(
+            f"•{participant[2]}"
+            for participant in participants
+            )
         bot.send_message(
                 callback.message.chat.id,
                 f"""📋 Заявка №{request[0]}
@@ -309,6 +310,11 @@ def callback_message(callback):
         requests  = get_user_requests(callback.message.chat.id)
 
         request = requests[page - 1]
+        participants = get_participants(request[0])
+        participants_text = "\n".join(
+            f"•{participant[2]}"
+            for participant in participants
+        )
         bot.edit_message_text(
             f"""📋 Заявка №{request[0]}
 
@@ -341,7 +347,7 @@ def callback_message(callback):
 📝 Подача заявок
 💳 Оплата участия
 
-👨 Мария
+👩‍🦰 Мария
 🎭 Конкурсная программа
 📅 Расписание мероприятий
 🏆 Награждение участников
@@ -368,7 +374,7 @@ def callback_message(callback):
 
 
     elif callback.data.startswith("faq_"):
-        faq = FAQ[callback.data.split()]
+        faq = FAQ[callback.data]
 
         bot.send_message(
             callback.message.chat.id,
@@ -378,13 +384,13 @@ def callback_message(callback):
     elif callback.data == "wa_1":
         bot.send_message(
             callback.message.chat.id,
-            f"📞 Елена Фляум: {WhatsApp["wa_1"]["number"]}"
+            f"📞 Елена Фляум: {WhatsApp['wa_1']['number']}"
         )
 
     elif callback.data == "wa_2":
         bot.send_message(
             callback.message.chat.id,
-            f"📞 Марина Михаиловна: {WhatsApp["wa_2"]["number"]}"
+            f"📞 Марина Михаиловна: {WhatsApp['wa_2']['number']}"
         )
 
     elif callback.data == "em":
@@ -392,4 +398,35 @@ def callback_message(callback):
             callback.message.chat.id,
             "lemani1974@mail.ru"
         )
+
+    elif callback.data == "faq_page_2":
+        bot.edit_message_text(
+            """❓ Часто задаваемые вопросы
+
+В этом разделе собраны ответы на самые популярные вопросы участников и руководителей коллективов.
+
+Если вы не нашли нужную информацию, вы всегда можете связаться с организаторами конкурса через соответствующий раздел меню.
+
+👇 Выберите интересующий вас вопрос:""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=faq_menu2()
+        )
+
+    elif callback.data == "faq_page_1":
+        bot.edit_message_text(
+            """❓ Часто задаваемые вопросы
+
+В этом разделе собраны ответы на самые популярные вопросы участников и руководителей коллективов.
+
+Если вы не нашли нужную информацию, вы всегда можете связаться с организаторами конкурса через соответствующий раздел меню.
+
+👇 Выберите интересующий вас вопрос:""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=faq_menu()
+        )
+
+
+
 

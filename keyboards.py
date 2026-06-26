@@ -213,6 +213,7 @@ def contact_menu1():
     btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
     markup.row(btn1)
     markup.row(btn2, btn3)
+    return markup
 
 
 
@@ -223,16 +224,17 @@ def contact_menu2():
     btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
     markup.row(btn1)
     markup.row(btn2, btn3)
+    return markup
 
 
 
 def faq_menu():
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_1"]["question"]}', callback_data = 'faq_1'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_2"]["question"]}', callback_data = 'faq_2'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_3"]["question"]}', callback_data = 'faq_3'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_4"]["question"]}', callback_data = 'faq_4'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_5"]["question"]}', callback_data = 'faq_5'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_1"]["question"], callback_data = 'faq_1'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_2"]["question"], callback_data = 'faq_2'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_3"]["question"], callback_data = 'faq_3'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_4"]["question"], callback_data = 'faq_4'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_5"]["question"], callback_data = 'faq_5'))
     btn_left = types.InlineKeyboardButton('⬅️', callback_data = 'none')
     btn_middle = types.InlineKeyboardButton(f'Стр. 1/2', callback_data = 'none')
     btn_right = types.InlineKeyboardButton('➡️', callback_data='faq_page_2')
@@ -240,17 +242,23 @@ def faq_menu():
 
     return markup
 
-
-
 def faq2_menu():
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_6"]["question"]}', callback_data = 'faq_6'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_7"]["question"]}', callback_data = 'faq_7'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_8"]["question"]}', callback_data = 'faq_8'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_9"]["question"]}', callback_data = 'faq_9'))
-    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_10"]["question"]}', callback_data = 'faq_10'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_6"]["question"], callback_data = 'faq_6'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_7"]["question"], callback_data = 'faq_7'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_8"]["question"], callback_data = 'faq_8'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_9"]["question"], callback_data = 'faq_9'))
+    markup.add(types.InlineKeyboardButton(FAQ["faq_10"]["question"], callback_data = 'faq_10'))
     btn_left = types.InlineKeyboardButton('⬅️', callback_data='faq_page_1')
     btn_middle = types.InlineKeyboardButton(f'Стр. 2/2', callback_data = 'none')
     btn_right = types.InlineKeyboardButton('➡️', callback_data='none')
     markup.row(btn_left, btn_middle, btn_right)
     return markup
+
+
+
+def contact_menu():
+    markup = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton('👩 Елена', callback_data = 'contact_1')
+    btn2 = types.InlineKeyboardButton('👩‍🦰 Марина', callback_data = 'contact_2')
+    markup.row(btn1, btn2)
