@@ -237,7 +237,7 @@ def faq_menu():
     markup.add(types.InlineKeyboardButton(FAQ["faq_5"]["question"], callback_data = 'faq_5'))
     btn_left = types.InlineKeyboardButton('⬅️', callback_data = 'none')
     btn_middle = types.InlineKeyboardButton(f'Стр. 1/2', callback_data = 'none')
-    btn_right = types.InlineKeyboardButton('➡️', callback_data='faq_page_2')
+    btn_right = types.InlineKeyboardButton('➡️', callback_data='faqpage_2')
     markup.row(btn_left, btn_middle, btn_right)
 
     return markup
@@ -249,7 +249,7 @@ def faq_menu2():
     markup.add(types.InlineKeyboardButton(FAQ["faq_8"]["question"], callback_data = 'faq_8'))
     markup.add(types.InlineKeyboardButton(FAQ["faq_9"]["question"], callback_data = 'faq_9'))
     markup.add(types.InlineKeyboardButton(FAQ["faq_10"]["question"], callback_data = 'faq_10'))
-    btn_left = types.InlineKeyboardButton('⬅️', callback_data='faq_page_1')
+    btn_left = types.InlineKeyboardButton('⬅️', callback_data='faqpage_1')
     btn_middle = types.InlineKeyboardButton(f'Стр. 2/2', callback_data = 'none')
     btn_right = types.InlineKeyboardButton('➡️', callback_data='none')
     markup.row(btn_left, btn_middle, btn_right)
@@ -262,3 +262,4 @@ def contact_menu():
     btn1 = types.InlineKeyboardButton('👩 Елена', callback_data = 'contact_1')
     btn2 = types.InlineKeyboardButton('👩‍🦰 Марина', callback_data = 'contact_2')
     markup.row(btn1, btn2)
+    return markup

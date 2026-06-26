@@ -2,7 +2,7 @@ from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
-from keyboards import competition_menu, contact_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
+from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants
 
 
@@ -378,7 +378,7 @@ def callback_message(callback):
 
         bot.send_message(
             callback.message.chat.id,
-            f"❓ {faq['question']}\n\n💬 {faq['answer']}"
+            f"{faq['question']}\n\n💬 {faq['answer']}"
         )
 
     elif callback.data == "wa_1":
@@ -399,7 +399,7 @@ def callback_message(callback):
             "lemani1974@mail.ru"
         )
 
-    elif callback.data == "faq_page_2":
+    elif callback.data == "faqpage_2":
         bot.edit_message_text(
             """❓ Часто задаваемые вопросы
 
@@ -413,7 +413,7 @@ def callback_message(callback):
             reply_markup=faq_menu2()
         )
 
-    elif callback.data == "faq_page_1":
+    elif callback.data == "faqpage_1":
         bot.edit_message_text(
             """❓ Часто задаваемые вопросы
 
@@ -425,6 +425,44 @@ def callback_message(callback):
             callback.message.chat.id,
             callback.message.message_id,
             reply_markup=faq_menu()
+        )
+
+    elif callback.data == "contact_1":
+        bot.edit_message_text(
+            """👩 Елена Фляум
+
+По всем организационным вопросам вы можете обратиться к Елене.
+
+Она поможет вам, если необходимо:
+
+📋 Подать заявку на конкурс
+💳 Получить информацию об оплате
+📄 Уточнить статус вашей заявки
+📞 Получить консультацию по участию
+
+👇 Выберите удобный способ связи:""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=contact_menu1()
+        )
+
+    elif callback.data == 'contact_2':
+        bot.edit_message_text(
+            """👩‍🦰 Мария
+
+По вопросам проведения конкурса вы можете обратиться к Марии.
+
+Она поможет вам, если необходимо:
+
+🎭 Уточнить конкурсную программу
+📅 Узнать расписание конкурса
+🏆 Получить информацию о награждении
+❓ Задать вопросы по проведению мероприятия
+
+👇 Выберите удобный способ связи:""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup = contact_menu2()
         )
 
 
