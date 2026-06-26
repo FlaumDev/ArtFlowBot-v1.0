@@ -465,6 +465,28 @@ def callback_message(callback):
             reply_markup = contact_menu2()
         )
 
+    elif callback.data == 'back_to_contact':
+        bot.edit_message_text(
+            """📞 Связаться с организаторами
+
+Выберите организатора, с которым хотите связаться:
+
+👩 Елена
+📋 Организационные вопросы
+📝 Подача заявок
+💳 Оплата участия
+
+👩‍🦰 Мария
+🎭 Конкурсная программа
+📅 Расписание мероприятий
+🏆 Награждение участников
+
+👇 Нажмите на нужную кнопку ниже.""",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=contact_menu()
+        )
+
 
 
 

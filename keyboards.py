@@ -208,22 +208,24 @@ def request_navigation(current, total):
 
 def contact_menu1():
     markup = types.InlineKeyboardMarkup()
-    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa_1')
-    btn2 = types.InlineKeyboardButton('Telegram', url = 'https://t.me/elenaflaum')
-    btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
+    btn1 = types.InlineKeyboardButton('🟢 WhatsApp', callback_data = 'wa_1')
+    btn2 = types.InlineKeyboardButton('🔵 Telegram', url = 'https://t.me/elenaflaum')
+    btn3 = types.InlineKeyboardButton('📩 Почта', callback_data = 'em')
     markup.row(btn1)
     markup.row(btn2, btn3)
+    markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data = 'back_to_contact'))
     return markup
 
 
 
 def contact_menu2():
     markup = types.InlineKeyboardMarkup()
-    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa_1')
-    btn2 = types.InlineKeyboardButton('Telegram', url = 'https://t.me/Marishka_060483')
-    btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
+    btn1 = types.InlineKeyboardButton('🟢 WhatsApp', callback_data = 'wa_1')
+    btn2 = types.InlineKeyboardButton('🔵 Telegram', url = 'https://t.me/Marishka_060483')
+    btn3 = types.InlineKeyboardButton('📩 Почта', callback_data = 'em')
     markup.row(btn1)
     markup.row(btn2, btn3)
+    markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_contact'))
     return markup
 
 
@@ -262,4 +264,5 @@ def contact_menu():
     btn1 = types.InlineKeyboardButton('👩 Елена', callback_data = 'contact_1')
     btn2 = types.InlineKeyboardButton('👩‍🦰 Марина', callback_data = 'contact_2')
     markup.row(btn1, btn2)
+    markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_contact'))
     return markup
