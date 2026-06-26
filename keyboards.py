@@ -1,4 +1,7 @@
 from telebot import types
+from storage import FAQ
+
+n = 1
 
 def main_menu():
     markup = types.InlineKeyboardMarkup()
@@ -203,23 +206,51 @@ def request_navigation(current, total):
 
     return markup
 
-def contact_menu():
+def contact_menu1():
     markup = types.InlineKeyboardMarkup()
-    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa')
-    btn2 = types.InlineKeyboardButton('Telegram', callback = 'tg')
-    btn3 = types.InlineKeyboardButton('Почта', callback = 'em')
+    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa_1')
+    btn2 = types.InlineKeyboardButton('Telegram', url = 'https://t.me/elenaflaum')
+    btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
+    markup.row(btn1)
     markup.row(btn2, btn3)
+
+
+
+def contact_menu2():
+    markup = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton('WhatsApp', callback_data = 'wa_1')
+    btn2 = types.InlineKeyboardButton('Telegram', url = 'https://t.me/Marishka_060483')
+    btn3 = types.InlineKeyboardButton('Почта', callback_data = 'em')
+    markup.row(btn1)
+    markup.row(btn2, btn3)
+
+
 
 def faq_menu():
     markup = types.InlineKeyboardMarkup()
-    btn1 = types.InlineKeyboardButton('', callback_data = 'q1')
-    btn2 = types.InlineKeyboardButton('', callback_data = 'q2')
-    btn3 = types.InlineKeyboardButton('', callback_data = 'q3')
-    btn4 = types.InlineKeyboardButton('', callback_data = 'q4')
-    btn5 = types.InlineKeyboardButton('', callback_data = 'q5')
-    btn6 = types.InlineKeyboardButton('', callback_data = 'q6')
-    btn7 = types.InlineKeyboardButton('', callback_data = 'q7')
-    btn8 = types.InlineKeyboardButton('', callback_data = 'q8')
-    btn9 = types.InlineKeyboardButton('', callback_data = 'q9')
-    btn10 = types.InlineKeyboardButton('', callback_data = 'q10')
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_1"]["question"]}', callback_data = 'faq_1'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_2"]["question"]}', callback_data = 'faq_2'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_3"]["question"]}', callback_data = 'faq_3'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_4"]["question"]}', callback_data = 'faq_4'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_5"]["question"]}', callback_data = 'faq_5'))
+    btn_left = types.InlineKeyboardButton('⬅️', callback_data = 'none')
+    btn_middle = types.InlineKeyboardButton(f'Стр. 1/2', callback_data = 'none')
+    btn_right = types.InlineKeyboardButton('➡️', callback_data='faq_page_2')
+    markup.row(btn_left, btn_middle, btn_right)
 
+    return markup
+
+
+
+def faq2_menu():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_6"]["question"]}', callback_data = 'faq_6'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_7"]["question"]}', callback_data = 'faq_7'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_8"]["question"]}', callback_data = 'faq_8'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_9"]["question"]}', callback_data = 'faq_9'))
+    markup.add(types.InlineKeyboardButton(f'{FAQ["faq_10"]["question"]}', callback_data = 'faq_10'))
+    btn_left = types.InlineKeyboardButton('⬅️', callback_data='faq_page_1')
+    btn_middle = types.InlineKeyboardButton(f'Стр. 2/2', callback_data = 'none')
+    btn_right = types.InlineKeyboardButton('➡️', callback_data='none')
+    markup.row(btn_left, btn_middle, btn_right)
+    return markup

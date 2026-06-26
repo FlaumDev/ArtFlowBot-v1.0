@@ -1,10 +1,9 @@
 from telebot import types
 from loader import  bot
-from storage import user_data
+from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
 from keyboards import competition_menu, back_to_info_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu, faq_menu
 from database import get_user_requests, get_participants
-
 
 
 @bot.callback_query_handler(func=lambda callback: True)
@@ -333,7 +332,21 @@ def callback_message(callback):
 
     elif callback.data == "contact":
         bot.edit_message_text(
-            """""",
+            """📞 Связаться с организаторами
+
+Выберите организатора, с которым хотите связаться:
+
+👩 Елена
+📋 Организационные вопросы
+📝 Подача заявок
+💳 Оплата участия
+
+👨 Мария
+🎭 Конкурсная программа
+📅 Расписание мероприятий
+🏆 Награждение участников
+
+👇 Нажмите на нужную кнопку ниже.""",
             callback.message.chat.id,
             callback.message.message_id,
             reply_markup = contact_menu()
@@ -341,10 +354,42 @@ def callback_message(callback):
 
     elif callback.data == "faq":
         bot.edit_message_text(
-            """""",
+            """❓ Часто задаваемые вопросы
+
+В этом разделе собраны ответы на самые популярные вопросы участников и руководителей коллективов.
+
+Если вы не нашли нужную информацию, вы всегда можете связаться с организаторами конкурса через соответствующий раздел меню.
+
+👇 Выберите интересующий вас вопрос:""",
             callback.message.chat.id,
             callback.message.message_id,
             reply_markup = faq_menu()
         )
 
+
+    elif callback.data.startswith("faq_"):
+        faq = FAQ[callback.data.split()]
+
+        bot.send_message(
+            callback.message.chat.id,
+            f"❓ {faq['question']}\n\n💬 {faq['answer']}"
+        )
+
+    elif callback.data == "wa_1":
+        bot.send_message(
+            callback.message.chat.id,
+            f"📞 Елена Фляум: {WhatsApp["wa_1"]["number"]}"
+        )
+
+    elif callback.data == "wa_2":
+        bot.send_message(
+            callback.message.chat.id,
+            f"📞 Марина Михаиловна: {WhatsApp["wa_2"]["number"]}"
+        )
+
+    elif callback.data == "em":
+        bot.send_message(
+            callback.message.chat.id,
+            "lemani1974@mail.ru"
+        )
 
