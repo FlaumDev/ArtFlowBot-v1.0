@@ -37,6 +37,11 @@ def admin(message):
     markup = types.InlineKeyboardMarkup()
     markup.add(
         types.InlineKeyboardButton(
+            ' Список всех заявок', callback_data = 'admin_requests'
+        )
+    )
+    markup.add(
+        types.InlineKeyboardButton(
             '📊 Статистика',
             callback_data = "admin_stats"
         )
