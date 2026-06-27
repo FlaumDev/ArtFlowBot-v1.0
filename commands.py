@@ -51,37 +51,43 @@ def admin(message):
 
     markup.add(
         types.InlineKeyboardButton(
-            '🔍 Поиск участника'
+            '🔍 Поиск участника',
+            callback_data = "admin_participants_search"
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '🗑 Удалить заявку'
+            '🗑 Удалить заявку',
+            callback_data = "admin_delete_request"
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '📤 Рассылка'
+            '📤 Рассылка',
+            callback_data = 'admin_spam'
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '📄 Выгрузить заявки'
+            '📄 Выгрузить заявки',
+            callback_data = 'admin_choice_request'
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '🔉 Скачать музыку'
+            '🔉 Скачать музыку',
+            callback_data = 'admin_save_music'
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '👱‍♂️ Добавить администратора'
+            '👱‍♂️ Добавить администратора',
+            callback_data = 'admin_add_admin'
         )
     )
     markup.add(
