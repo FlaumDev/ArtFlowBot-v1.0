@@ -36,5 +36,5 @@ def admin(message):
     bot.send_message(
         message.chat.id,
         "🛠 Панель администратора",
-        reply_markup=admin_requests_menu
+        reply_markup=admin_requests_menu()
     )

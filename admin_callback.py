@@ -2,7 +2,7 @@ from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from database import get_user_requests, get_participants
-from admin_keyboards import admin_requests_menu
+from admin_keyboards import admin_requests_menu_menu
 
 
 
@@ -12,13 +12,17 @@ def callback_message(callback):
     bot.answer_callback_query(callback.id)
 
     if callback.data == 'admin_requests':
-        markup = types.InlineKeyboardMarkup()
+        requests = get_user_requests(
+            callback.message.chat.id
+        )
 
-        page = int(callback.data.split("_")[-1])
-
-        requests = get_user_requests(callback.message.chat.id)
-
-        request = requests[page - 1]
+        if not requests:
+            bot.send_message(
+                callback.message.chat.id,
+                "📋 У вас пока нет заявок"
+            )
+            return
+        request = requests[0]
         participants = get_participants(request[0])
         participants_text = "\n".join(
             f"•{participant[2]}"
@@ -41,5 +45,5 @@ def callback_message(callback):
     """,
             callback.message.chat.id,
             callback.message.message_id,
-            reply_markup=admin_requests_menu
+            reply_markup=admin_requests_menu_menu()
         )
