@@ -2,7 +2,7 @@ from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from database import get_user_requests, get_participants
-import commands
+from admin_keyboards import admin_requests_menu
 
 
 
@@ -26,9 +26,6 @@ def callback_message(callback):
         )
         bot.edit_message_text(
             f"""📋 Заявка №{request[0]}
-
-📊 Статус: {request[12]}
-
 🏙 Город: {request[2]}
 🏫 Коллектив: {request[3]}
 🎵 Номер: {request[4]}
@@ -39,8 +36,10 @@ def callback_message(callback):
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
 📧 E-mail: {request[11]}        
+
+📊 Статус: {request[12]}
     """,
             callback.message.chat.id,
             callback.message.message_id,
-            reply_markup=markup
+            reply_markup=admin_requests_menu
         )
