@@ -1,6 +1,6 @@
 from loader import bot
 from keyboards import main_menu
-
+from telebot import types
 
 
 @bot.message_handler(commands=['start', 'info'])
@@ -17,3 +17,82 @@ def main(message):
 • Инструментальное творчество
 
 👇 Выберите интересующий вас раздел в меню ниже:''', reply_markup=main_menu())
+
+
+
+ADMIN_IDS = [2087517047]
+
+@bot.message_handler(commands=["admin"])
+def admin(message):
+
+    if message.chat.id not in ADMIN_IDS:
+        bot.send_message(
+            message.chat.id,
+            "❌ У вас нет доступа к панели администратора."
+        )
+        return
+
+
+
+    markup = types.InlineKeyboardMarkup()
+    markup.add(
+        types.InlineKeyboardButton(
+            '📊 Статистика',
+            callback_data = "admin_stats"
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔎 Поиск заявки',
+            callback_data = "admin_search"
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔍 Поиск участника'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🗑 Удалить заявку'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📤 Рассылка'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📄 Выгрузить заявки'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔉 Скачать музыку'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '👱‍♂️ Добавить администратора'
+        )
+    )
+    markup.add(
+        types.InlineKeyboardButton(
+            "📋 Заявки",
+            callback_data="admin_requests"
+        )
+    )
+
+    bot.send_message(
+        message.chat.id,
+        "🛠 Панель администратора",
+        reply_markup=markup
+    )

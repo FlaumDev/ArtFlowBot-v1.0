@@ -1,7 +1,6 @@
 from telebot import types
 from storage import FAQ
 
-n = 1
 
 def main_menu():
     markup = types.InlineKeyboardMarkup()
@@ -259,10 +258,10 @@ def faq_menu2():
 
 
 
-def contact_menu():
+def contact_menu(): #вернуться в меню с связи орг
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton('👩 Елена', callback_data = 'contact_1')
     btn2 = types.InlineKeyboardButton('👩‍🦰 Марина', callback_data = 'contact_2')
     markup.row(btn1, btn2)
-    markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_contact'))
+    markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_info'))
     return markup
