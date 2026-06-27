@@ -1,7 +1,7 @@
 from telebot import types
 
 
-def admin_requests_menu():
+def admin_requests_menu(): # кнопки админ меню
     markup = types.InlineKeyboardMarkup()
     markup.add(
         types.InlineKeyboardButton(
@@ -36,6 +36,7 @@ def admin_requests_menu():
             callback_data='admin_add_admin'
         )
     )
+    return markup
 
 def admin_requests_menu_menu():#кнопки с пагинации админ списка заявок
     markup = types.InlineKeyboardMarkup()
@@ -65,3 +66,4 @@ def admin_requests_menu_menu():#кнопки с пагинации админ с
             callback_data='admin_save_music'
         )
     )
+    return markup
