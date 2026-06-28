@@ -3,7 +3,7 @@ from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants
+from database import get_user_requests, get_participants, get_all_requests
 from admin_keyboards import admin_requests_menu_menu
 
 
@@ -488,14 +488,12 @@ def callback_message(callback):
             reply_markup=contact_menu()
         )
     elif callback.data == 'admin_requests':
-        requests = get_user_requests(
-            callback.message.chat.id
-        )
+        requests = get_all_requests()
 
         if not requests:
             bot.send_message(
                 callback.message.chat.id,
-                "📋 У вас пока нет заявок"
+                "📋 пока нет заявок"
             )
             return
         request = requests[0]
