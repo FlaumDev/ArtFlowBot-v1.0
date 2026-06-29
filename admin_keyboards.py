@@ -1,4 +1,6 @@
 from telebot import types
+from loader import bot
+
 
 
 def admin_requests_menu(): # кнопки админ меню

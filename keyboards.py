@@ -1,7 +1,6 @@
 from telebot import types
 from storage import FAQ
 
-
 def main_menu():
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton('🏆 Конкурсы', callback_data='competition')

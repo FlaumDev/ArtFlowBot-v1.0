@@ -9,6 +9,7 @@ from admin_keyboards import admin_requests_menu_menu
 
 @bot.callback_query_handler(func=lambda callback: True)
 def callback_message(callback):
+    print("CALLBACK:", callback.data)
 
     bot.answer_callback_query(callback.id)
 
