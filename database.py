@@ -86,7 +86,18 @@ telegram_id = %s
     conn.close()
     return requests
 
+def get_all_users_requests():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('''
+    SELECT * FROM ArtFlow_bid
+        WHERE ORDER BY id ASC
+    ''')
 
+    requests = cur.fetchall()
+    cur.close()
+    conn.close()
+    return requests
 
 def get_participants(bid_id):
     conn = get_connection()

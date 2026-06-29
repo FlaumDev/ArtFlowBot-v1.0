@@ -3,13 +3,12 @@ from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants, get_all_requests
-from admin_keyboards import admin_requests_menu_menu
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation
 
 
 @bot.callback_query_handler(func=lambda callback: True)
 def callback_message(callback):
-    print("CALLBACK:", callback.data)
 
     bot.answer_callback_query(callback.id)
 
@@ -520,5 +519,36 @@ def callback_message(callback):
     """,
             callback.message.chat.id,
             callback.message.message_id,
-            reply_markup=admin_requests_menu_menu()
+            reply_markup=admin_requests_menu_menu(1, len(requests))
+        )
+    elif callback.data.startswith("admin_request_page_"):
+        page = int(callback.data.split("_")[-1])
+
+        requests = get_all_users_requests()
+
+        request = requests[page-1]
+
+        participants = get_participants(request[0])
+        participants_text = "\n".join(
+            f"• {participant[0]}"
+            for participant in participants
+        )
+        bot.edit_message_text(
+            f"""📋 Заявка №{request[0]}
+🏙 Город: {request[2]}
+🏫 Коллектив: {request[3]}
+🎵 Номер: {request[4]}
+🎭 Жанр: {request[5]}
+👥 Участников: {request[6]} чел.
+🎂 Возрастная категория: {request[7]}        
+⏱️ Хронометраж {request[8]} мин.
+👨‍🏫 Руководитель: {request[9]}
+📞 WhatsApp: {request[10]}
+📧 E-mail: {request[11]}        
+
+📊 Статус: {request[12]}
+    """, callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_request_navigation(page, len(requests)
+                                            )
         )

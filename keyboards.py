@@ -242,6 +242,8 @@ def faq_menu():
 
     return markup
 
+
+
 def faq_menu2():
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton(FAQ["faq_6"]["question"], callback_data = 'faq_6'))
