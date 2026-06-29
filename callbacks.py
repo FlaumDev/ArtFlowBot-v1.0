@@ -282,9 +282,9 @@ def callback_message(callback):
         request = requests[0]
         participants = get_participants(request[0])
         participants_text = "\n".join(
-            f"•{participant[2]}"
+            f"• {participant[0]}"
             for participant in participants
-            )
+        )
         bot.send_message(
                 callback.message.chat.id,
                 f"""📋 Заявка №{request[0]}
@@ -314,7 +314,7 @@ def callback_message(callback):
         request = requests[page - 1]
         participants = get_participants(request[0])
         participants_text = "\n".join(
-            f"•{participant[2]}"
+            f"• {participant[0]}"
             for participant in participants
         )
         bot.edit_message_text(
@@ -500,7 +500,7 @@ def callback_message(callback):
         request = requests[0]
         participants = get_participants(request[0])
         participants_text = "\n".join(
-            f"•{participant[2]}"
+            f"• {participant[0]}"
             for participant in participants
         )
         bot.edit_message_text(
