@@ -129,3 +129,42 @@ def get_all_requests():
     conn.close()
 
     return requests
+
+def all_count():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT COUNT(*) FROM ArtFlow_bid
+    ''')
+    count = cur.fetchall()
+    cur.close()
+    conn.close()
+    return count
+
+def all_participants():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT COUNT(*) FROM participants
+    ''')
+    part_count = cur.fetchall()
+    cur.close()
+    conn.close()
+    return part_count
+
+def requests_status():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT * FROM ArtFlow_bid
+    ''')
+
+    status = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return status

@@ -3,7 +3,7 @@ from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation
 
 
@@ -551,4 +551,65 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=admin_request_navigation(page, len(requests)
                                             )
+        )
+    elif callback.data == "admin_stats":
+        stat1 = 0
+        stat2 = 0
+        stat3 = 0
+        stat4 = 0
+
+        count = all_count()
+        part_count = all_participants()
+        requests_data = requests_status()
+
+        for stat in requests_data[12]:
+            if stat.lower() == "на рассмотрении":
+                stat1 += 1
+            elif stat.lower().strip()[12] == "подтверждено":
+                stat2 += 1
+            elif stat.lower().strip()[12] == "отклонено":
+                stat3 += 1
+            elif stat.lower()[12] == "ожидает оплаты":
+                stat4 += 1
+
+
+
+
+
+        bot.edit_message_text(
+            f"""
+            📊 Статистика ArtFlow
+
+📋 Всего заявок: {count}
+👥 Всего участников: {part_count}
+
+🟡 На рассмотрении: {stat1}
+🟢 Подтверждено: {stat2}
+🔴 Отклонено: {stat3}
+💳 Ожидает оплаты: {stat4}
+
+━━━━━━━━━━━━━━
+
+🎭 По жанрам
+• Хореография — 17
+• Вокал — 12
+• Инструментальное — 5
+
+━━━━━━━━━━━━━━
+
+🏙 Топ городов
+1. Павлодар — 11
+2. Астана — 8
+3. Алматы — 6
+
+━━━━━━━━━━━━━━
+
+📅 За сегодня: 2 заявки
+📅 За неделю: 14 заявок
+📅 За месяц: 34 заявки
+            """,
+
+
+            callback.message.chat.id,
+            callback.message.message_id
         )
