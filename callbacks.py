@@ -203,6 +203,8 @@ def callback_message(callback):
         }
 
         user_data[user_id]["genre"] = genres[callback.data]
+        if user_id in user_data:
+            return
 
         bot.send_message(
             user_id,
@@ -318,7 +320,6 @@ def callback_message(callback):
 🎂 Возрастная категория: {request[7]}        
 ⏱️ Хронометраж {request[8]}
 👨‍🏫 Руководитель: {request[9]}
-👥 Участники: {participants_text}
 📞 WhatsApp: {request[10]}
 📧 E-mail: {request[11]}        
     """, reply_markup = request_navigation(1, len(requests)
@@ -585,19 +586,22 @@ def callback_message(callback):
         part_count = all_participants()
         requests_data = requests_status()
 
-        for stat in requests_data[12]:
-            if stat.lower() == "на рассмотрении":
+        for request in requests_data:
+            status = request[12]
+
+            if status.lower() == "на рассмотрении":
                 stat1 += 1
-            elif stat.lower().strip()[12] == "подтверждено":
+            elif status.lower().strip() == "подтверждено":
                 stat2 += 1
-            elif stat.lower().strip()[12] == "отклонено":
+            elif status.lower().strip() == "отклонено":
                 stat3 += 1
-            elif stat.lower()[12] == "ожидает оплаты":
+            elif status.lower() == "ожидает оплаты":
                 stat4 += 1
             else:
-                print("Я чучмек")
+                print("Неизвестный статус:", status)
 
-        for genre in requests_data[5]:
+        for request in requests_data:
+            genre = request[5]
 
 
             if genre.lower() == "хореография":
@@ -607,7 +611,7 @@ def callback_message(callback):
             elif genre.lower() == "инструментальный":
                 genre3 += 1
             else:
-                print("Я чучмек")
+                print("Неизвестный статус:", genre)
 
 
 
@@ -645,14 +649,18 @@ def callback_message(callback):
         )
     elif callback.data == "back_to_admin_info":
         if callback.message.chat.id not in ADMIN_IDS:
-            bot.send_message(
+            bot.edit_message_text(
+
+                "❌ У вас нет доступа к панели администратора.",
                 callback.message.chat.id,
-                "❌ У вас нет доступа к панели администратора."
+                callback.message.message_id
             )
             return
 
-        bot.send_message(
-            callback.message.chat.id,
+        bot.edit_message_text(
+
             "🛠 Панель администратора",
+            callback.message.chat.id,
+            callback.message.message_id,
             reply_markup=admin_requests_menu()
         )

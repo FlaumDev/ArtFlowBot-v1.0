@@ -91,7 +91,7 @@ def get_all_users_requests():
     cur = conn.cursor()
     cur.execute('''
     SELECT * FROM ArtFlow_bid
-        WHERE ORDER BY id ASC
+        ORDER BY id ASC
     ''')
 
     requests = cur.fetchall()
@@ -137,7 +137,7 @@ def all_count():
     cur.execute('''
     SELECT COUNT(*) FROM ArtFlow_bid
     ''')
-    count = cur.fetchall()
+    count = cur.fetchone()[0]
     cur.close()
     conn.close()
     return count
@@ -149,7 +149,7 @@ def all_participants():
     cur.execute('''
     SELECT COUNT(*) FROM participants
     ''')
-    part_count = cur.fetchall()
+    part_count = cur.fetchone()[0]
     cur.close()
     conn.close()
     return part_count

@@ -75,8 +75,6 @@ def number_genre(message):
 
 
 
-
-
 def number_of_participants(message):
 
     user_id = message.chat.id
@@ -218,18 +216,18 @@ def WhatsApp_number(message):
         bot.register_next_step_handler(message, WhatsApp_number)
         return
 
-    phone = re.sub(r"[^\d+]", "", message.text)
+    clean_phone = re.sub(r"[^\d+]", "", message.text)
 
     pattern = r"^\+?[0-9]{10,15}$"
 
-    if not re.match(pattern, phone):
+    if not re.match(pattern, clean_phone):
         bot.send_message(
             message.chat.id, "❌ Неверный формат номера\nПримеры: +77052510210\n87052510210"
         )
         bot.register_next_step_handler(message, WhatsApp_number)
         return
 
-    user_data[user_id]["WhatsApp"] = phone
+    user_data[user_id]["WhatsApp"] = clean_phone
 
     bot.send_message(message.chat.id, "📨 Шаг 10 из 12\nВведите ваш e-mail")
     bot.register_next_step_handler(message, email)
