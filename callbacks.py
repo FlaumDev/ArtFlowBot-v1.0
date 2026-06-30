@@ -4,8 +4,8 @@ from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city, number_of_participants
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status
-from admin_keyboards import admin_requests_menu_menu, admin_request_navigation
-
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu
+from commands import ADMIN_IDS
 
 @bot.callback_query_handler(func=lambda callback: True)
 def callback_message(callback):
@@ -577,6 +577,9 @@ def callback_message(callback):
         stat2 = 0
         stat3 = 0
         stat4 = 0
+        genre1 = 0
+        genre2 = 0
+        genre3 = 0
 
         count = all_count()
         part_count = all_participants()
@@ -591,6 +594,20 @@ def callback_message(callback):
                 stat3 += 1
             elif stat.lower()[12] == "ожидает оплаты":
                 stat4 += 1
+            else:
+                print("Я чучмек")
+
+        for genre in requests_data[5]:
+
+
+            if genre.lower() == "хореография":
+                genre1 += 1
+            elif genre.lower() == "вокал":
+                genre2 += 1
+            elif genre.lower() == "инструментальный":
+                genre3 += 1
+            else:
+                print("Я чучмек")
 
 
 
@@ -611,16 +628,9 @@ def callback_message(callback):
 ━━━━━━━━━━━━━━
 
 🎭 По жанрам
-• Хореография — 17
-• Вокал — 12
-• Инструментальное — 5
-
-━━━━━━━━━━━━━━
-
-🏙 Топ городов
-1. Павлодар — 11
-2. Астана — 8
-3. Алматы — 6
+• Хореография — {genre1}
+• Вокал — {genre2}
+• Инструментальное — {genre3}
 
 ━━━━━━━━━━━━━━
 
@@ -632,4 +642,17 @@ def callback_message(callback):
 
             callback.message.chat.id,
             callback.message.message_id
+        )
+    elif callback.data == "back_to_admin_info":
+        if callback.message.chat.id not in ADMIN_IDS:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ У вас нет доступа к панели администратора."
+            )
+            return
+
+        bot.send_message(
+            callback.message.chat.id,
+            "🛠 Панель администратора",
+            reply_markup=admin_requests_menu()
         )

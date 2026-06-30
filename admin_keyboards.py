@@ -68,6 +68,12 @@ def admin_requests_menu_menu(current, total):#кнопки с пагинации
             callback_data='admin_save_music'
         )
     )
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔙 Назад',
+            callback_data="back_to_admin_info"
+        )
+    )
 
     buttons = []
 
@@ -136,6 +142,13 @@ def admin_request_navigation(current, total):
             callback_data='admin_save_music'
         )
     )
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔙 Назад',
+            callback_data="back_to_admin_info"
+        )
+    )
+
 
     buttons = []
 
