@@ -266,3 +266,28 @@ def contact_menu(): #вернуться в меню с связи орг
     markup.row(btn1, btn2)
     markup.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_info'))
     return markup
+
+
+
+def genre_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    btn1 = types.InlineKeyboardButton(
+        "💃 Хореография",
+        callback_data = 'genre_1'
+    )
+
+    btn2 = types.InlineKeyboardButton(
+        "🎤 Вокал",
+        callback_data = 'genre_2'
+    )
+
+    btn3 = types.InlineKeyboardButton(
+        "🎻 Инструментальный",
+        callback_data = 'genre_3'
+    )
+
+    markup.row(btn1, btn2)
+    markup.row(btn3)
+
+    return markup

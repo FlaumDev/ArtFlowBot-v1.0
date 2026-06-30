@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 from loader import bot
 from storage import user_data
-from keyboards import end_registration_menu, exit_registration_menu, age_menu
+from keyboards import end_registration_menu, exit_registration_menu, age_menu, genre_menu
 import re
 
 
@@ -68,20 +68,13 @@ def number_name(message):
 
 def number_genre(message):
 
-    user_id = message.chat.id
-
-    if message.content_type != "text":
-        bot.send_message(
-            message.chat.id, "❌ Введите текстом"
+    bot.send_message(
+        message.chat.id,
+        "👥 Шаг 5 из 12\nВведите количество участников в номере",
+        reply_markup = genre_menu()
         )
 
-        bot.register_next_step_handler(message, number_genre)
-        return
 
-    user_data[user_id]["genre"] = message.text.strip()
-
-    bot.send_message(message.chat.id, "👥 Шаг 5 из 12\nВведите количество участников в номере")
-    bot.register_next_step_handler(message, number_of_participants)
 
 
 

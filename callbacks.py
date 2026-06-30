@@ -1,7 +1,7 @@
 from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
-from registration import end_registration, performance_time, city
+from registration import end_registration, performance_time, city, number_of_participants
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation
@@ -190,6 +190,26 @@ def callback_message(callback):
             callback.message,
             performance_time
         )
+
+
+    elif callback.data.startswith("genre_"):
+
+        user_id = callback.message.chat.id
+
+        genres = {
+            "genre_1": "Хореография",
+            "genre_2": "Вокал",
+            "genre_3": "Инструментальный",
+        }
+
+        user_data[user_id]["genre"] = genres[callback.data]
+
+        bot.send_message(
+            user_id,
+            "👥 Шаг 5 из 12\nВведите количество участников в номере"
+        )
+
+        bot.register_next_step_handler(callback.message, number_of_participants)
 
 
 
