@@ -174,7 +174,7 @@ def request_time(days):
 
     cur.execute('''
     SELECT COUNT(*) FROM ArtFlow_bid
-    WHERE create_at >= NOW() (%s * INTERVAL '1 days')
+    WHERE create_at >= NOW() - (%s * INTERVAL '1 days')
     ''', (days,))
 
     count = cur.fetchone()[0]
