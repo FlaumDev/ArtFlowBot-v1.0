@@ -1,5 +1,7 @@
 import telebot
 from telebot import types
+from telebot.types import InlineKeyboardMarkup
+
 from loader import bot
 from storage import user_data
 from keyboards import end_registration_menu, exit_registration_menu, age_menu, genre_menu
@@ -20,7 +22,7 @@ def city(message):
     user_data[user_id]["city"] = message.text.strip()
 
     bot.send_message(
-        message.chat.id, "🏫 Шаг 2 из 12\nВведите название коллектива:"
+        message.chat.id, "🏫 Шаг 2 из 11\nВведите название коллектива:"
     )
 
     bot.register_next_step_handler(message, name_team)
@@ -42,7 +44,7 @@ def name_team(message):
     user_data[user_id]["team"] = message.text.strip()
 
     bot.send_message(message.chat.id,
-                     "🎵 Шаг 3 из 12\nВведите название номера:")
+                     "🎵 Шаг 3 из 11\nВведите название номера:")
     bot.register_next_step_handler(message, number_name)
 
 
@@ -61,7 +63,7 @@ def number_name(message):
 
     user_data[user_id]["name"] = message.text.strip()
 
-    bot.send_message(message.chat.id, "🎭 Шаг 4 из 12\nВведите жанр номера:", reply_markup = genre_menu())
+    bot.send_message(message.chat.id, "🎭 Шаг 4 из 11\nВведите жанр номера:", reply_markup = genre_menu())
 
 
 
@@ -98,7 +100,7 @@ def number_of_participants(message):
 
     bot.send_message(
         message.chat.id,
-        f"👥 Шаг 6 из 12\nВведите ФИО 1-го участника:"
+        f"👥 Шаг 6 из 11\nВведите ФИО 1-го участника:"
     )
 
     bot.register_next_step_handler(
@@ -136,7 +138,7 @@ def add_participant(message):
 
         bot.send_message(
             message.chat.id,
-            f"👥 Шаг 6 из 12\nВведите ФИО {current + 1}-го участника:"
+            f"👥 Шаг 6 из 11\nВведите ФИО {current + 1}-го участника:"
         )
 
 
@@ -174,7 +176,7 @@ def performance_time(message):
         return
     user_data[user_id]["performance_time"] = time
 
-    bot.send_message(message.chat.id, "👤 Шаг 8 из 12\nВведите ФИО руководителя:")
+    bot.send_message(message.chat.id, "👤 Шаг 8 из 11\nВведите ФИО руководителя:")
     bot.register_next_step_handler(message, SFP_supervisor)
 
 
@@ -193,7 +195,7 @@ def SFP_supervisor(message):
 
     user_data[user_id]["supervisor"] = message.text.strip()
 
-    bot.send_message(message.chat.id, "📞 Шаг 9 из 12\nВведите контактный номер WhatsApp")
+    bot.send_message(message.chat.id, "📞 Шаг 9 из 11\nВведите контактный номер WhatsApp")
     bot.register_next_step_handler(message, WhatsApp_number)
 
 
@@ -222,12 +224,14 @@ def WhatsApp_number(message):
 
     user_data[user_id]["WhatsApp"] = clean_phone
 
-    bot.send_message(message.chat.id, "📨 Шаг 10 из 12\nВведите ваш e-mail")
+    bot.send_message(message.chat.id, "📨 Шаг 10 из 11\nВведите ваш e-mail")
     bot.register_next_step_handler(message, email)
 
 
 
 def email(message):
+
+
 
     user_id = message.chat.id
 
@@ -249,6 +253,31 @@ def email(message):
         return
 
     user_data[user_id]["email"] = email_text
+
+    markup = InlineKeyboardMarkup()
+
+    markup.row(types.InlineKeyboardButton('✅ Да', callback_data = 'mus_yes'),
+               types.InlineKeyboardButton('❌ Нет', callback_data = 'mus_no'))
+
+    bot.send_message('🎵 Используется ли музыкальное сопровождение?', reply_markup=markup)
+
+
+def music_file(message):
+    user_id = message.chat.id
+
+    if message.audio:
+        user_data[user_id]["music_file_id"] = message.audio.file_id
+        user_data[user_id]["music_file_name"] = message.audio.file_name
+    elif message.document:
+        user_data[user_id]["music_file_id"] = message.document.file_id
+        user_data[user_id]["music_file_name"] = message.document.file_name
+    else:
+        bot.send_message(
+            message.chat.id,
+            "❌ Прикрепите музыкальный файл"
+        )
+        bot.register_next_step_handler(message, music_file)
+        return
 
     exit_registration(message)
 
@@ -283,7 +312,7 @@ def exit_registration(message):
 
 👥 Участники: {chr(10).join(data['participants'])}
 
-🎧 Музыкальный файл: Прикреплён
+🎧 Музыкальный файл: {data['music_file_name']}
 
 ⚠️ Пожалуйста, внимательно проверьте правильность указанных данных.
 

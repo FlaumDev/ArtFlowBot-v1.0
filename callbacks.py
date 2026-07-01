@@ -1,9 +1,9 @@
 from telebot import types
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
-from registration import end_registration, performance_time, city, number_of_participants
+from registration import end_registration, performance_time, city, number_of_participants, music_file, exit_registration
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu
 from commands import ADMIN_IDS
 
@@ -219,10 +219,9 @@ def callback_message(callback):
                 callback.message.chat.id, "❌ Данные заявки не найдены. Пожалуйста, заполните заявку заново."
             )
             return
+
         data = user_data[callback.message.chat.id]
 
-        """ conn = sqlite3.connect('ArtFlow.db')
-        cur = conn.cursor() """
         from database import get_connection
 
         conn = get_connection()
@@ -241,9 +240,11 @@ def callback_message(callback):
                 performance_time,
                 SFP_supervisor,
                 WhatsApp_number,
-                email
+                email,
+                music_file_id,
+                music_file_name,
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id''',
             (
                 callback.message.chat.id,
@@ -256,7 +257,9 @@ def callback_message(callback):
                 data['performance_time'],
                 data['supervisor'],
                 data['WhatsApp'],
-                data['email']
+                data['email'],
+                data['music_file_id'],
+                data['music_file_name']
             )
         )
 
@@ -666,3 +669,10 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=admin_requests_menu()
         )
+    elif callback.data.startwith("mus_"):
+        if callback.data.endwith("yes"):
+            bot.send_message('🎵 Прикрепите музыкальный файл')
+            bot.register_next_step_handler(callback.message, music_file)
+        elif callback.data.endwith("no"):
+            bot.register_next_step_handler(callback.message, exit_registration)
+

@@ -40,7 +40,9 @@ def create_tables():
                     WhatsApp_number TEXT,
                     email TEXT,
                     status TEXT DEFAULT 'На рассмотрении',
-                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    music_file_id TEXT,
+                    music_file_name TEXT
                 )
                 ''')
 
