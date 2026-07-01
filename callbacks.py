@@ -203,8 +203,6 @@ def callback_message(callback):
         }
 
         user_data[user_id]["genre"] = genres[callback.data]
-        if user_id in user_data:
-            return
 
         bot.send_message(
             user_id,
