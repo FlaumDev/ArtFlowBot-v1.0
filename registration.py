@@ -62,7 +62,6 @@ def number_name(message):
     user_data[user_id]["name"] = message.text.strip()
 
     bot.send_message(message.chat.id, "🎭 Шаг 4 из 12\nВведите жанр номера:", reply_markup = genre_menu())
-    bot.register_next_step_handler(message, number_of_participants)
 
 
 
