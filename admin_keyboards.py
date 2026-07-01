@@ -20,6 +20,20 @@ def admin_requests_menu(): # кнопки админ меню
 
     markup.add(
         types.InlineKeyboardButton(
+            '🏆 Конкурсы',
+            callback_data="admin_competitions"
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '❓ FAQ',
+            callback_data="admin_faq"
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
             '📤 Рассылка',
             callback_data='admin_spam'
         )
@@ -38,6 +52,7 @@ def admin_requests_menu(): # кнопки админ меню
             callback_data='admin_add_admin'
         )
     )
+
     return markup
 
 def admin_requests_menu_menu(current, total):#кнопки с пагинации админ списка заявок

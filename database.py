@@ -41,7 +41,8 @@ def create_tables():
                     SFP_supervisor TEXT,
                     WhatsApp_number TEXT,
                     email TEXT,
-                    status TEXT DEFAULT 'На рассмотрении'
+                    status TEXT DEFAULT 'На рассмотрении',
+                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 ''')
 
@@ -168,3 +169,19 @@ def requests_status():
     conn.close()
 
     return status
+
+def request_time(days):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT COUNT(*) FROM ArtFlow_bid
+    WHERE create_at >= NOW() - INTERVAL %s
+    ''', (f"{days} days",))
+
+    count = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return count

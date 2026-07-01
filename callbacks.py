@@ -3,7 +3,7 @@ from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city, number_of_participants
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu
 from commands import ADMIN_IDS
 
@@ -585,6 +585,9 @@ def callback_message(callback):
         count = all_count()
         part_count = all_participants()
         requests_data = requests_status()
+        today = request_time(1)
+        week = request_time(7)
+        month = request_time(30)
 
         for request in requests_data:
             status = request[12]
@@ -638,9 +641,9 @@ def callback_message(callback):
 
 ━━━━━━━━━━━━━━
 
-📅 За сегодня: 2 заявки
-📅 За неделю: 14 заявок
-📅 За месяц: 34 заявки
+📅 За сегодня: {today} заявки
+📅 За неделю: {week} заявок
+📅 За месяц: {month} заявки
             """,
 
 
