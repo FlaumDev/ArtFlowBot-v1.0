@@ -669,10 +669,10 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=admin_requests_menu()
         )
-    elif callback.data.startwith("mus_"):
-        if callback.data.endwith("yes"):
-            bot.send_message(callback.message.chat.id, '🎵 Прикрепите музыкальный файл')
-            bot.register_next_step_handler(callback.message, music_file)
-        elif callback.data.endwith("no"):
-            bot.register_next_step_handler(callback.message, exit_registration)
-
+    elif callback.data.startswith("mus_"):
+        if callback.data.endswith("yes"):
+            msg = bot.send_message(callback.message.chat.id, "🎵 Прикрепите музыкальный файл")
+            bot.register_next_step_handler(msg, music_file)
+        elif callback.data.endswith("no"):
+            user_data[callback.message.chat.id]["music_file"] = None
+            exit_registration(callback.message)
