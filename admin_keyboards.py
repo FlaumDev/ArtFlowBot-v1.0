@@ -193,3 +193,12 @@ def admin_request_navigation(current, total):
     markup.row(*buttons)
 
     return markup
+
+
+
+def admin_stats_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(types.InlineKeyboardButton('Назад', callback_data="back_to_admin_info"))
+
+    return markup

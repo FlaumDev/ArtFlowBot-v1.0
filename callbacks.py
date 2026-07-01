@@ -4,7 +4,7 @@ from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city, number_of_participants
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time
-from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu
 from commands import ADMIN_IDS
 
 @bot.callback_query_handler(func=lambda callback: True)
@@ -648,7 +648,8 @@ def callback_message(callback):
 
 
             callback.message.chat.id,
-            callback.message.message_id
+            callback.message.message_id,
+            reply_markup = admin_stats_menu()
         )
     elif callback.data == "back_to_admin_info":
         if callback.message.chat.id not in ADMIN_IDS:
