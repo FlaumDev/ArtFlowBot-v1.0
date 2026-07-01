@@ -259,7 +259,7 @@ def email(message):
     markup.row(types.InlineKeyboardButton('✅ Да', callback_data = 'mus_yes'),
                types.InlineKeyboardButton('❌ Нет', callback_data = 'mus_no'))
 
-    bot.send_message('🎵 Используется ли музыкальное сопровождение?', reply_markup=markup)
+    bot.send_message(message.chat.id, '🎵 Используется ли музыкальное сопровождение?', reply_markup=markup)
 
 
 def music_file(message):

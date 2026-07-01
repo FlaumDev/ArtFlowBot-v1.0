@@ -671,7 +671,7 @@ def callback_message(callback):
         )
     elif callback.data.startwith("mus_"):
         if callback.data.endwith("yes"):
-            bot.send_message('🎵 Прикрепите музыкальный файл')
+            bot.send_message(callback.message.chat.id, '🎵 Прикрепите музыкальный файл')
             bot.register_next_step_handler(callback.message, music_file)
         elif callback.data.endwith("no"):
             bot.register_next_step_handler(callback.message, exit_registration)
