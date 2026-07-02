@@ -141,7 +141,7 @@ def admin_search_participant(message):
     )
 
 @bot.callback_query_handler(func=lambda callback: True)
-def callback_message(callback):
+def callback_message(callback, music_file=None):
 
     bot.answer_callback_query(callback.id)
 
@@ -835,7 +835,7 @@ def callback_message(callback):
 
         if callback.data.endswith("yes"):
             msg = bot.send_message(user_id, "🎵 Прикрепите музыкальный файл")
-            bot.register_next_step_handler(msg,music_file)
+            bot.register_next_step_handler(msg, music_file)
         elif callback.data.endswith("no"):
             user_data[user_id]["music_file_id"] = None
             user_data[user_id]["music_file_name"] = "Не используется"
