@@ -141,7 +141,7 @@ def admin_search_participant(message):
     )
 
 @bot.callback_query_handler(func=lambda callback: True)
-def callback_message(callback, music_file=None):
+def callback_message(callback):
 
     bot.answer_callback_query(callback.id)
 
@@ -419,11 +419,9 @@ def callback_message(callback, music_file=None):
         )
 
         if not requests:
-            bot.send_message(
-                callback.message.chat.id,
-                "📋 У вас пока нет заявок"
-            )
+            bot.send_message(callback.message.chat.id, "📋 У вас пока нет заявок")
             return
+
         request = requests[0]
         participants = get_participants(request[0])
         participants_text = "\n".join(
@@ -455,6 +453,16 @@ def callback_message(callback, music_file=None):
         page = int(callback.data.split("_")[-1])
 
         requests  = get_user_requests(callback.message.chat.id)
+
+        if not requests:
+            bot.send_message(callback.message.chat.id, "📋 У вас пока нет заявок")
+            return
+
+        if page > len(requests):
+            page = len(requests)
+
+        if page < 1:
+            page = 1
 
         request = requests[page - 1]
         participants = get_participants(request[0])
@@ -688,7 +696,19 @@ def callback_message(callback, music_file=None):
 
         requests = get_all_users_requests()
 
+        if not requests:
+            bot.send_message(callback.message.chat.id, "📋 У вас пока нет заявок")
+            return
+
+        if page > len(requests):
+            page = len(requests)
+
+        if page < 1:
+            page = 1
+
         request = requests[page-1]
+
+
 
         participants = get_participants(request[0])
         participants_text = "\n".join(
@@ -914,12 +934,12 @@ def callback_message(callback, music_file=None):
                 try:
                     file_info = bot.get_file(request[14])
                     downloaded_file = bot.download_file(file_info.file_path)
-                    music_file = BytesIO(downloaded_file)
-                    music_file.name = request[15] or f"music_{request_id}"
+                    music_file_obj = BytesIO(downloaded_file)
+                    music_file_obj.name = request[15] or f"music_{request_id}"
 
                     bot.send_document(
                         callback.message.chat.id,
-                        music_file,
+                        music_file_obj,
                         caption=f"🎵 Музыкальный файл заявки №{request_id}\n{request[15]}"
                     )
                 except Exception:
