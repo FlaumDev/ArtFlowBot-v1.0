@@ -3,7 +3,7 @@ from io import BytesIO
 import re
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
-from registration import end_registration, performance_time, city, number_of_participants, music_file, exit_registration
+from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
 from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu
@@ -825,13 +825,20 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=admin_requests_menu()
         )
+
+
     elif callback.data.startswith("mus_"):
+
+        user_id = callback.message.chat.id
+
         if callback.data.endswith("yes"):
-            msg = bot.send_message(callback.message.chat.id, "🎵 Прикрепите музыкальный файл")
-            bot.register_next_step_handler(msg, music_file)
+            msg = bot.send_message(user_id, "🎵 Прикрепите музыкальный файл")
+            bot.register_next_step_handler(msg,music_file)
         elif callback.data.endswith("no"):
-            user_data[callback.message.chat.id]["music_file"] = None
+            user_data[user_id]["music_file_id"] = None
+            user_data[user_id]["music_file_name"] = "Не используется"
             exit_registration(callback.message)
+
 
 
     elif callback.data == 'admin_delete_request':

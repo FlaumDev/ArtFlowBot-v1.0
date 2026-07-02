@@ -267,16 +267,17 @@ def music_file(message):
 
     if message.audio:
         user_data[user_id]["music_file_id"] = message.audio.file_id
-        user_data[user_id]["music_file_name"] = message.audio.file_name
+        user_data[user_id]["music_file_name"] = message.audio.file_name or "audio"
+
     elif message.document:
         user_data[user_id]["music_file_id"] = message.document.file_id
-        user_data[user_id]["music_file_name"] = message.document.file_name
+        user_data[user_id]["music_file_name"] = message.document.file_name or "document"
     else:
-        bot.send_message(
+        msg = bot.send_message(
             message.chat.id,
             "❌ Прикрепите музыкальный файл"
         )
-        bot.register_next_step_handler(message, music_file)
+        bot.register_next_step_handler(msg, music_file)
         return
 
     exit_registration(message)
