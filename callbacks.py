@@ -289,7 +289,9 @@ def callback_message(callback):
     elif callback.data=='registration':
         user_data[callback.message.chat.id] = {
             "participants": [],
-            "current_participant": 1
+            "current_participant": 1,
+            "music_file_id": None,
+            "music_file_name": "Не используется"
         }
 
         bot.send_message(

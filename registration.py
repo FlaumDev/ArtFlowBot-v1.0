@@ -313,7 +313,7 @@ def exit_registration(message):
 
 👥 Участники: {chr(10).join(data['participants'])}
 
-🎧 Музыкальный файл: {data['music_file_name']}
+🎧 Музыкальный файл: {data.get('music_file_name', 'Не используется')}
 
 ⚠️ Пожалуйста, внимательно проверьте правильность указанных данных.
 
