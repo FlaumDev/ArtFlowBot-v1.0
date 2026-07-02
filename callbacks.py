@@ -229,23 +229,21 @@ def callback_message(callback):
 
         cur.execute(
             '''
-            INSERT INTO ArtFlow_bid (
-                telegram_id,
-                city,
-                name_team,
-                number_name,
-                number_genre,
-                number_of_participants,
-                age,
-                performance_time,
-                SFP_supervisor,
-                WhatsApp_number,
-                email,
-                music_file_id,
-                music_file_name
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id''',
+            INSERT INTO ArtFlow_bid (telegram_id,
+                                     city,
+                                     name_team,
+                                     number_name,
+                                     number_genre,
+                                     number_of_participants,
+                                     age,
+                                     performance_time,
+                                     SFP_supervisor,
+                                     WhatsApp_number,
+                                     email,
+                                     music_file_id,
+                                     music_file_name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            ''',
             (
                 callback.message.chat.id,
                 data['city'],
@@ -265,39 +263,19 @@ def callback_message(callback):
 
         bid_id = cur.fetchone()[0]
 
+
         for participant in data['participants']:
             cur.execute("""
-            INSERT INTO participants (bid_id, participant_name)
-            VALUES (%s, %s)
-            """, (bid_id, participant))
+                        INSERT INTO participants (bid_id, participant_name)
+                        VALUES (%s, %s)
+                        """, (bid_id, participant))
 
         conn.commit()
         cur.close()
         conn.close()
-
-
-
-        for participant in data['participants']:
-
-            cur.execute(
-                """
-                INSERT INTO participants (
-                bid_id,
-                participant_name
-                )
-                VALUES (%s, %s)
-                """,
-                (
-                    bid_id,
-                    participant
-                )
-            )
-        conn.commit()
-        cur.close()
-        conn.close()
-
         end_registration(callback.message)
-        del user_data[callback.message.chat.id]
+
+        user_data.pop(callback.message.chat.id, None)
 
     elif callback.data == "my_requests":
 
