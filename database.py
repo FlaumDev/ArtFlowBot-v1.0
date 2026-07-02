@@ -131,6 +131,92 @@ def get_all_requests():
 
     return requests
 
+def get_request_by_id(bid_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT * FROM ArtFlow_bid
+    WHERE id = %s
+    ''', (bid_id,))
+
+    request = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return request
+
+def search_requests(search_text):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    request_id = int(search_text) if search_text.isdigit() and len(search_text) <= 9 else None
+    search_like = f"%{search_text}%"
+    phone_text = ''.join(symbol for symbol in search_text if symbol.isdigit())
+    phone_like = f"%{phone_text}%" if phone_text else search_like
+
+    cur.execute('''
+    SELECT * FROM ArtFlow_bid
+    WHERE id = %s
+        OR email ILIKE %s
+        OR WhatsApp_number ILIKE %s
+        OR regexp_replace(WhatsApp_number, '[^0-9]', '', 'g') ILIKE %s
+    ORDER BY id ASC
+    ''', (request_id, search_like, search_like, phone_like))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests
+
+def search_requests_by_participant(participant_name):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT DISTINCT ArtFlow_bid.* FROM ArtFlow_bid
+    JOIN participants ON participants.bid_id = ArtFlow_bid.id
+    WHERE participants.participant_name ILIKE %s
+    ORDER BY ArtFlow_bid.id ASC
+    ''', (f"%{participant_name}%",))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests
+
+def delete_request(bid_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    DELETE FROM ArtFlow_bid
+    WHERE id = %s
+    ''', (bid_id,))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def update_request_status(bid_id, status):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    UPDATE ArtFlow_bid
+    SET status = %s
+    WHERE id = %s
+    ''', (status, bid_id))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def all_count():
     conn = get_connection()
     cur = conn.cursor()

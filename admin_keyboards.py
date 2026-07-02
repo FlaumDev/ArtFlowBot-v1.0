@@ -85,6 +85,12 @@ def admin_requests_menu_menu(current, total):#кнопки с пагинации
     )
     markup.add(
         types.InlineKeyboardButton(
+            '✏️ Изменить статус',
+            callback_data='admin_change_status'
+        )
+    )
+    markup.add(
+        types.InlineKeyboardButton(
             '🔙 Назад',
             callback_data="back_to_admin_info"
         )
@@ -159,6 +165,12 @@ def admin_request_navigation(current, total):
     )
     markup.add(
         types.InlineKeyboardButton(
+            '✏️ Изменить статус',
+            callback_data='admin_change_status'
+        )
+    )
+    markup.add(
+        types.InlineKeyboardButton(
             '🔙 Назад',
             callback_data="back_to_admin_info"
         )
@@ -200,5 +212,16 @@ def admin_stats_menu():
     markup = types.InlineKeyboardMarkup()
 
     markup.add(types.InlineKeyboardButton('Назад', callback_data="back_to_admin_info"))
+
+    return markup
+
+def admin_status_menu(request_id):
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(types.InlineKeyboardButton('На рассмотрении', callback_data=f"admin_status_{request_id}_review"))
+    markup.add(types.InlineKeyboardButton('Подтверждено', callback_data=f"admin_status_{request_id}_approved"))
+    markup.add(types.InlineKeyboardButton('Отклонено', callback_data=f"admin_status_{request_id}_rejected"))
+    markup.add(types.InlineKeyboardButton('Ожидает оплаты', callback_data=f"admin_status_{request_id}_payment"))
+    markup.add(types.InlineKeyboardButton('Назад', callback_data=f"admin_open_request_{request_id}"))
 
     return markup

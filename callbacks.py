@@ -1,11 +1,144 @@
 from telebot import types
+from io import BytesIO
+import re
 from loader import  bot
 from storage import user_data, FAQ, WhatsApp
 from registration import end_registration, performance_time, city, number_of_participants, music_file, exit_registration
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_menu2
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection
-from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu
 from commands import ADMIN_IDS
+
+def admin_request_text(request):
+    participants = get_participants(request[0])
+    participants_text = "\n".join(
+        f"• {participant[0]}"
+        for participant in participants
+    )
+
+    if not participants_text:
+        participants_text = "—"
+
+    return f"""📋 Заявка №{request[0]}
+🏙 Город: {request[2]}
+🏫 Коллектив: {request[3]}
+🎵 Номер: {request[4]}
+🎭 Жанр: {request[5]}
+👥 Участников: {request[6]} чел.
+🎂 Возрастная категория: {request[7]}        
+⏱️ Хронометраж {request[8]} мин.
+👨‍🏫 Руководитель: {request[9]}
+📞 WhatsApp: {request[10]}
+📧 E-mail: {request[11]}        
+🎵 Музыкальный файл: {request[15]}
+
+👥 Участники:
+{participants_text}
+
+📊 Статус: {request[12]}
+    """
+
+def get_admin_request_id(text):
+    result = re.search(r"Заявка №(\d+)", text or "")
+
+    if result:
+        return int(result.group(1))
+
+    return None
+
+def admin_send_found_requests(message, requests, title):
+    if not requests:
+        bot.send_message(
+            message.chat.id,
+            "❌ Заявки не найдены"
+        )
+        return
+
+    if len(requests) == 1:
+        bot.send_message(
+            message.chat.id,
+            admin_request_text(requests[0]),
+            reply_markup=admin_requests_menu_menu(1, 1)
+        )
+        return
+
+    markup = types.InlineKeyboardMarkup()
+
+    for request in requests[:30]:
+        markup.add(
+            types.InlineKeyboardButton(
+                f"Заявка №{request[0]} — {request[11]}",
+                callback_data=f"admin_open_request_{request[0]}"
+            )
+        )
+
+    if len(requests) > 30:
+        markup.add(
+            types.InlineKeyboardButton(
+                "Показаны первые 30 заявок",
+                callback_data="none"
+            )
+        )
+
+    bot.send_message(
+        message.chat.id,
+        f"{title}\nНайдено заявок: {len(requests)}\nВыберите заявку:",
+        reply_markup=markup
+    )
+
+def admin_search_request(message):
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите ID заявки, e-mail или WhatsApp текстом"
+        )
+        bot.register_next_step_handler(message, admin_search_request)
+        return
+
+    search_text = message.text.strip()
+
+    if not search_text:
+        bot.send_message(
+            message.chat.id,
+            "❌ Поисковый запрос не может быть пустым"
+        )
+        bot.register_next_step_handler(message, admin_search_request)
+        return
+
+    requests = search_requests(search_text)
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "🔎 Результаты поиска заявки"
+    )
+
+def admin_search_participant(message):
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите ФИО участника текстом"
+        )
+        bot.register_next_step_handler(message, admin_search_participant)
+        return
+
+    participant_name = message.text.strip()
+
+    if not participant_name:
+        bot.send_message(
+            message.chat.id,
+            "❌ ФИО участника не может быть пустым"
+        )
+        bot.register_next_step_handler(message, admin_search_participant)
+        return
+
+    requests = search_requests_by_participant(participant_name)
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "🔍 Результаты поиска участника"
+    )
 
 @bot.callback_query_handler(func=lambda callback: True)
 def callback_message(callback):
@@ -305,12 +438,13 @@ def callback_message(callback):
 🏫 Коллектив: {request[3]}
 🎵 Номер: {request[4]}
 🎭 Жанр: {request[5]}
-👥 Участников: {request[6]}
+👥 Участников: {request[6]} чел.
 🎂 Возрастная категория: {request[7]}        
-⏱️ Хронометраж {request[8]}
+⏱️ Хронометраж {request[8]} мин.
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
-📧 E-mail: {request[11]}        
+📧 E-mail: {request[11]} 
+🎵 Музыкальный файл: {request[15]}       
     """, reply_markup = request_navigation(1, len(requests)
         )
         )
@@ -340,7 +474,8 @@ def callback_message(callback):
 ⏱️ Хронометраж {request[8]} мин.
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
-📧 E-mail: {request[11]}        
+📧 E-mail: {request[11]}
+🎵 Музыкальный файл: {request[15]}        
     """,    callback.message.chat.id,
             callback.message.message_id,
             reply_markup = request_navigation(page, len(requests)
@@ -497,6 +632,20 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=contact_menu()
         )
+    elif callback.data == 'admin_search':
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🔎 Введите ID заявки, e-mail или WhatsApp:"
+        )
+        bot.register_next_step_handler(msg, admin_search_request)
+
+    elif callback.data == 'admin_participants_search':
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🔍 Введите ФИО участника:"
+        )
+        bot.register_next_step_handler(msg, admin_search_participant)
+
     elif callback.data == 'admin_requests':
         requests = get_all_requests()
 
@@ -523,7 +672,8 @@ def callback_message(callback):
 ⏱️ Хронометраж {request[8]} мин.
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
-📧 E-mail: {request[11]}        
+📧 E-mail: {request[11]}    
+🎵 Музыкальный файл: {request[15]}    
 
 📊 Статус: {request[12]}
     """,
@@ -555,12 +705,30 @@ def callback_message(callback):
 👨‍🏫 Руководитель: {request[9]}
 📞 WhatsApp: {request[10]}
 📧 E-mail: {request[11]}        
+🎵 Музыкальный файл: {request[15]}
 
 📊 Статус: {request[12]}
     """, callback.message.chat.id,
             callback.message.message_id,
             reply_markup=admin_request_navigation(page, len(requests)
                                             )
+        )
+    elif callback.data.startswith("admin_open_request_"):
+        request_id = int(callback.data.split("_")[-1])
+        request = get_request_by_id(request_id)
+
+        if not request:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Заявка не найдена"
+            )
+            return
+
+        bot.edit_message_text(
+            admin_request_text(request),
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_requests_menu_menu(1, 1)
         )
     elif callback.data == "admin_stats":
         stat1 = 0
@@ -664,3 +832,141 @@ def callback_message(callback):
         elif callback.data.endswith("no"):
             user_data[callback.message.chat.id]["music_file"] = None
             exit_registration(callback.message)
+
+
+    elif callback.data == 'admin_delete_request':
+        request_id = get_admin_request_id(callback.message.text)
+
+        if not request_id:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Не удалось определить ID заявки"
+            )
+            return
+
+        request = get_request_by_id(request_id)
+
+        if not request:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Заявка не найдена"
+            )
+            return
+
+        delete_request(request_id)
+
+        bot.edit_message_text(
+            f"🗑 Заявка №{request_id} удалена",
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_requests_menu()
+        )
+
+    elif callback.data == 'admin_save_music':
+        request_id = get_admin_request_id(callback.message.text)
+
+        if not request_id:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Не удалось определить ID заявки"
+            )
+            return
+
+        request = get_request_by_id(request_id)
+
+        if not request:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Заявка не найдена"
+            )
+            return
+
+        if not request[14]:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Музыкальный файл не прикреплен"
+            )
+            return
+
+        try:
+            bot.send_document(
+                callback.message.chat.id,
+                request[14],
+                caption=f"🎵 Музыкальный файл заявки №{request_id}\n{request[15]}"
+            )
+        except Exception:
+            try:
+                bot.send_audio(
+                    callback.message.chat.id,
+                    request[14],
+                    caption=f"🎵 Музыкальный файл заявки №{request_id}\n{request[15]}"
+                )
+            except Exception:
+                try:
+                    file_info = bot.get_file(request[14])
+                    downloaded_file = bot.download_file(file_info.file_path)
+                    music_file = BytesIO(downloaded_file)
+                    music_file.name = request[15] or f"music_{request_id}"
+
+                    bot.send_document(
+                        callback.message.chat.id,
+                        music_file,
+                        caption=f"🎵 Музыкальный файл заявки №{request_id}\n{request[15]}"
+                    )
+                except Exception:
+                    bot.send_message(
+                        callback.message.chat.id,
+                        "❌ Не удалось отправить музыкальный файл"
+                    )
+
+    elif callback.data == 'admin_change_status':
+        request_id = get_admin_request_id(callback.message.text)
+
+        if not request_id:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Не удалось определить ID заявки"
+            )
+            return
+
+        bot.edit_message_reply_markup(
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_status_menu(request_id)
+        )
+
+    elif callback.data.startswith("admin_status_"):
+        status_list = {
+            "review": "На рассмотрении",
+            "approved": "Подтверждено",
+            "rejected": "Отклонено",
+            "payment": "Ожидает оплаты"
+        }
+
+        status_data = callback.data.split("_")
+        request_id = int(status_data[2])
+        status = status_list.get(status_data[3])
+
+        if not status:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Неизвестный статус"
+            )
+            return
+
+        update_request_status(request_id, status)
+        request = get_request_by_id(request_id)
+
+        if not request:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Заявка не найдена"
+            )
+            return
+
+        bot.edit_message_text(
+            admin_request_text(request),
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_requests_menu_menu(1, 1)
+        )
