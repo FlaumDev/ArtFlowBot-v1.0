@@ -242,7 +242,7 @@ def callback_message(callback):
                 WhatsApp_number,
                 email,
                 music_file_id,
-                music_file_name,
+                music_file_name
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id''',
@@ -264,6 +264,16 @@ def callback_message(callback):
         )
 
         bid_id = cur.fetchone()[0]
+
+        for participant in data['participants']:
+            cur.execute("""
+            INSERT INTO participants (bid_id, participant_name)
+            VALUES (%s, %s)
+            """, (bid_id, participant))
+
+        conn.commit()
+        cur.close()
+        conn.close()
 
 
 
