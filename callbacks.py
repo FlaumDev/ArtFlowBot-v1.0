@@ -2,6 +2,8 @@ from telebot import types
 from io import BytesIO
 import re
 from html import escape
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
 from loader import  bot
 from storage import user_data, WhatsApp, COMPETITIONS
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
@@ -86,6 +88,102 @@ def admin_send_found_requests(message, requests, title):
         f"{title}\nНайдено заявок: {len(requests)}\nВыберите заявку:",
         reply_markup=markup
     )
+
+def create_requests_excel():
+    requests = get_all_requests()
+
+    if not requests:
+        return None
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Заявки"
+
+    headers = [
+        "ID",
+        "Telegram ID",
+        "Город",
+        "Коллектив",
+        "Название номера",
+        "Жанр",
+        "Количество участников",
+        "Возраст",
+        "Хронометраж",
+        "Руководитель",
+        "WhatsApp",
+        "Email",
+        "Статус",
+        "Дата создания",
+        "Название музыкального файла",
+        "Участники"
+    ]
+
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    for request in requests:
+        participants = get_participants(request[0])
+        participants_text = "\n".join(
+            participant[0]
+            for participant in participants
+        )
+
+        sheet.append([
+            request[0],
+            request[1],
+            request[2],
+            request[3],
+            request[4],
+            request[5],
+            request[6],
+            request[7],
+            request[8],
+            request[9],
+            request[10],
+            request[11],
+            request[12],
+            request[13],
+            request[15],
+            participants_text
+        ])
+
+    for row in sheet.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    widths = {
+        "A": 8,
+        "B": 16,
+        "C": 18,
+        "D": 28,
+        "E": 28,
+        "F": 20,
+        "G": 14,
+        "H": 18,
+        "I": 14,
+        "J": 28,
+        "K": 18,
+        "L": 28,
+        "M": 18,
+        "N": 22,
+        "O": 32,
+        "P": 38
+    }
+
+    for column, width in widths.items():
+        sheet.column_dimensions[column].width = width
+
+    sheet.freeze_panes = "A2"
+
+    excel_file = BytesIO()
+    workbook.save(excel_file)
+    excel_file.seek(0)
+    excel_file.name = "artflow_requests.xlsx"
+
+    return excel_file
 
 def admin_search_request(message):
     if message.content_type != "text":
@@ -1519,6 +1617,25 @@ def callback_message(callback):
             "🗑 Введите ID вопроса для удаления:"
         )
         bot.register_next_step_handler(msg, admin_delete_faq_id)
+
+    elif callback.data == 'admin_choice_request':
+        if not admin_check(callback.message):
+            return
+
+        excel_file = create_requests_excel()
+
+        if not excel_file:
+            bot.send_message(
+                callback.message.chat.id,
+                "📋 пока нет заявок"
+            )
+            return
+
+        bot.send_document(
+            callback.message.chat.id,
+            excel_file,
+            caption="📄 Выгрузка заявок ArtFlow"
+        )
 
     elif callback.data == 'admin_search':
         msg = bot.send_message(

@@ -3,3 +3,4 @@ dotenv
 PyTelegramBotAPI
 python-dotenv
 psycopg2-binary
+openpyxl
