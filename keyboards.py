@@ -1,5 +1,6 @@
 from telebot import types
 from database import get_all_faq
+from storage import COMPETITIONS
 
 def main_menu():
     markup = types.InlineKeyboardMarkup()
@@ -72,11 +73,21 @@ def age_menu():
 
 def competition_menu():
     markup = types.InlineKeyboardMarkup()
-    markup.add(
-        types.InlineKeyboardButton(
-            '🏆 СОДРУЖЕСТВО ТАЛАНТОВ г.Павлодар', callback_data='competition_1'
+
+    for competition_id, competition in COMPETITIONS.items():
+        markup.add(
+            types.InlineKeyboardButton(
+                competition["title"], callback_data=competition_id
+            )
         )
-    )
+
+    if not COMPETITIONS:
+        markup.add(
+            types.InlineKeyboardButton(
+                'Конкурсов пока нет', callback_data='none'
+            )
+        )
+
     markup.add(
         types.InlineKeyboardButton(
             '🔙 Назад', callback_data='back_to_info'
@@ -111,18 +122,7 @@ def competition_1_menu():
 
 
 def back_to_competition_menu():
-    markup = types.InlineKeyboardMarkup()
-    markup.add(
-        types.InlineKeyboardButton(
-            '🏆 СОДРУЖЕСТВО ТАЛАНТОВ г.Павлодар', callback_data='competition_1'
-        )
-    )
-    markup.add(
-        types.InlineKeyboardButton(
-            '🔙 Назад', callback_data='back_to_info'
-        )
-    )
-    return markup
+    return competition_menu()
 
 
 
@@ -148,11 +148,21 @@ def back_to_competition1_menu():
 
 def apply_menu():
     markup = types.InlineKeyboardMarkup()
-    markup.add(
-        types.InlineKeyboardButton(
-            '🏆 СОДРУЖЕСТВО ТАЛАНТОВ г.Павлодар', callback_data='competition_1'
+
+    for competition_id, competition in COMPETITIONS.items():
+        markup.add(
+            types.InlineKeyboardButton(
+                competition["title"], callback_data=competition_id
+            )
         )
-    )
+
+    if not COMPETITIONS:
+        markup.add(
+            types.InlineKeyboardButton(
+                'Конкурсов пока нет', callback_data='none'
+            )
+        )
+
     markup.add(
         types.InlineKeyboardButton(
             '🔙 Назад', callback_data='back_to_info'

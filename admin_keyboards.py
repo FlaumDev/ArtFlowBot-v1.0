@@ -265,3 +265,43 @@ def admin_faq_menu():
     )
 
     return markup
+
+def admin_competitions_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📋 Обновить список',
+            callback_data='admin_competitions'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '➕ Добавить конкурс',
+            callback_data='admin_add_competition'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '✏️ Изменить конкурс',
+            callback_data='admin_change_competition'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🗑 Удалить конкурс',
+            callback_data='admin_delete_competition'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔙 Назад',
+            callback_data='back_to_admin_info'
+        )
+    )
+
+    return markup

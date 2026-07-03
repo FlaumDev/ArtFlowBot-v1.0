@@ -6,6 +6,7 @@ from loader import bot
 from storage import user_data
 from keyboards import end_registration_menu, exit_registration_menu, age_menu, genre_menu
 import re
+from html import escape
 
 
 def city(message):
@@ -287,9 +288,10 @@ def music_file(message):
 def exit_registration(message):
 
     data = user_data[message.chat.id]
+    competition_name = escape(data.get("competition_name", "СОДРУЖЕСТВО ТАЛАНТОВ"))
     bot.send_message(message.chat.id, f'''📋 Проверьте данные вашей заявки
 
-🏆 Конкурс: СОДРУЖЕСТВО ТАЛАНТОВ
+🏆 Конкурс: {competition_name}
 
 🏙 Город: {data['city']}
 
@@ -323,10 +325,14 @@ def exit_registration(message):
 
 
 def end_registration(message):
-    bot.send_message(message.chat.id, '''🎉 Ваша заявка на участие в конкурсе “Содружество Талантов” успешно отправлена!
+    data = user_data.get(message.chat.id, {})
+    competition_name = escape(data.get("competition_name", "Содружество Талантов"))
+    competition_date = escape(data.get("competition_date", "10 июня 2026 года"))
+
+    bot.send_message(message.chat.id, f'''🎉 Ваша заявка на участие в конкурсе “{competition_name}” успешно отправлена!
 
 🙏 Спасибо, что выбрали ArtFlow. В ближайшее время организатор свяжется с вами для подтверждения и отправки счёта на оплату.
 
-📅 Не забудьте, что приём заявок до 10 июня 2026 года. Мы рады видеть вас среди участников и желаем вам удачи!
+📅 Не забудьте дату проведения: {competition_date}. Мы рады видеть вас среди участников и желаем вам удачи!
 
 Если у вас есть вопросы, обращайтесь — мы всегда на связи.''', reply_markup= end_registration_menu())

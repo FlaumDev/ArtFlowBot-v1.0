@@ -3,11 +3,11 @@ from io import BytesIO
 import re
 from html import escape
 from loader import  bot
-from storage import user_data, WhatsApp
+from storage import user_data, WhatsApp, COMPETITIONS
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_page_menu
 from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status, get_all_faq, get_faq_by_id, add_faq, update_faq, delete_faq
-from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu, admin_competitions_menu
 from commands import ADMIN_IDS
 
 def admin_request_text(request):
@@ -166,6 +166,522 @@ def admin_check(message):
         return False
 
     return True
+
+def get_current_competition(user_id):
+    competition_id = "competition_1"
+
+    if user_id in user_data:
+        competition_id = user_data[user_id].get("selected_competition", competition_id)
+
+    if competition_id not in COMPETITIONS and COMPETITIONS:
+        competition_id = next(iter(COMPETITIONS))
+
+    return competition_id, COMPETITIONS.get(competition_id)
+
+def competition_text(competition):
+    price = competition.get("price") or "Не указана"
+
+    return f"""🏆 {escape(competition.get("name") or competition.get("title") or "")}
+
+📍 Место проведения:
+{escape(competition.get("place") or "Не указано")}
+
+📅 Дата проведения:
+{escape(competition.get("date") or "Не указана")}
+
+{escape(competition.get("description") or "")}
+
+💳 Стоимость участия:
+{escape(price)}
+
+👇 Выберите дальнейшее действие:"""
+
+def bid_info_text(competition):
+    title = competition.get("title") if competition else "конкурс"
+
+    return f"""📝 Регистрация участника(-ов)
+
+Для подачи заявки на конкурс "{escape(title)}" подготовьте следующую информацию:
+
+📌 Данные, которые потребуются:
+🏙 Город
+🏫 Название коллектива / школы / учреждения
+🎵 Название номера
+🎭 Жанр номера
+👥 Количество участников в номере
+🎂 Возрастная категория
+⏱ Хронометраж выступления(в минутах)
+👤 ФИО руководителя / хореографа
+📞 Контактный номер WhatsApp
+📞 Ваш e-mail
+👥 Список участников (ФИО каждого участника)
+🎧 Музыкальный файл номера (формат MP3)
+
+После начала регистрации бот последовательно запросит все необходимые данные. Пожалуйста, подготовьте информацию заранее.
+
+Готовы начать регистрацию?"""
+
+def admin_competitions_text():
+    if not COMPETITIONS:
+        return "🏆 Конкурсов пока нет\n\nДобавьте первый конкурс через админ-панель."
+
+    text = "🏆 Конкурсы\n\n"
+
+    for competition_id, competition in COMPETITIONS.items():
+        price = competition.get("price") or "Не указана"
+        rules_file = competition.get("rules_file") or "Не загружено"
+
+        text += f"""ID: {escape(competition_id)}
+Название: {escape(competition.get("title") or "")}
+Дата: {escape(competition.get("date") or "Не указана")}
+Место: {escape(competition.get("place") or "Не указано")}
+Стоимость: {escape(price)}
+Положение: {escape(rules_file)}
+
+"""
+
+    return text
+
+def get_next_competition_id():
+    numbers = []
+
+    for competition_id in COMPETITIONS:
+        number = competition_id.split("_")[-1]
+
+        if number.isdigit():
+            numbers.append(int(number))
+
+    return f"competition_{max(numbers, default=0) + 1}"
+
+def admin_add_competition_title(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите название конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_title)
+        return
+
+    title = message.text.strip()
+
+    if not title:
+        bot.send_message(
+            message.chat.id,
+            "❌ Название конкурса не может быть пустым"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_title)
+        return
+
+    user_data.setdefault(message.chat.id, {})
+    user_data[message.chat.id]["admin_competition"] = {
+        "title": title,
+        "name": title
+    }
+
+    msg = bot.send_message(
+        message.chat.id,
+        "📝 Введите описание конкурса:"
+    )
+    bot.register_next_step_handler(msg, admin_add_competition_description)
+
+def admin_add_competition_description(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите описание конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_description)
+        return
+
+    description = message.text.strip()
+
+    if not description:
+        bot.send_message(
+            message.chat.id,
+            "❌ Описание конкурса не может быть пустым"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_description)
+        return
+
+    user_data[message.chat.id]["admin_competition"]["description"] = description
+
+    msg = bot.send_message(
+        message.chat.id,
+        "📄 Введите путь к положению или отправьте - если положения нет:"
+    )
+    bot.register_next_step_handler(msg, admin_add_competition_rules)
+
+def admin_add_competition_rules(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите путь к положению текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_rules)
+        return
+
+    rules_file = message.text.strip()
+
+    if rules_file == "-":
+        rules_file = None
+
+    user_data[message.chat.id]["admin_competition"]["rules_file"] = rules_file
+
+    msg = bot.send_message(
+        message.chat.id,
+        "📅 Введите дату проведения:"
+    )
+    bot.register_next_step_handler(msg, admin_add_competition_date)
+
+def admin_add_competition_date(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите дату проведения текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_date)
+        return
+
+    date = message.text.strip()
+
+    if not date:
+        bot.send_message(
+            message.chat.id,
+            "❌ Дата проведения не может быть пустой"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_date)
+        return
+
+    user_data[message.chat.id]["admin_competition"]["date"] = date
+
+    msg = bot.send_message(
+        message.chat.id,
+        "📍 Введите место проведения:"
+    )
+    bot.register_next_step_handler(msg, admin_add_competition_place)
+
+def admin_add_competition_place(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите место проведения текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_place)
+        return
+
+    place = message.text.strip()
+
+    if not place:
+        bot.send_message(
+            message.chat.id,
+            "❌ Место проведения не может быть пустым"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_place)
+        return
+
+    user_data[message.chat.id]["admin_competition"]["place"] = place
+
+    msg = bot.send_message(
+        message.chat.id,
+        "💳 Введите стоимость участия или отправьте - если стоимости нет:"
+    )
+    bot.register_next_step_handler(msg, admin_add_competition_price)
+
+def admin_add_competition_price(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите стоимость участия текстом"
+        )
+        bot.register_next_step_handler(message, admin_add_competition_price)
+        return
+
+    price = message.text.strip()
+
+    if price == "-":
+        price = ""
+
+    user_data[message.chat.id]["admin_competition"]["price"] = price
+
+    competition_id = get_next_competition_id()
+    COMPETITIONS[competition_id] = user_data[message.chat.id]["admin_competition"]
+    user_data[message.chat.id].pop("admin_competition", None)
+
+    bot.send_message(
+        message.chat.id,
+        f"✅ Конкурс {competition_id} добавлен"
+    )
+
+    bot.send_message(
+        message.chat.id,
+        admin_competitions_text(),
+        reply_markup=admin_competitions_menu()
+    )
+
+def admin_change_competition_id(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите ID конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_id)
+        return
+
+    competition_id = message.text.strip()
+
+    if competition_id not in COMPETITIONS:
+        bot.send_message(
+            message.chat.id,
+            "❌ Конкурс не найден"
+        )
+        return
+
+    user_data.setdefault(message.chat.id, {})
+    user_data[message.chat.id]["admin_competition_id"] = competition_id
+    user_data[message.chat.id]["admin_competition"] = COMPETITIONS[competition_id].copy()
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущее название:\n{escape(COMPETITIONS[competition_id].get('title') or '')}\n\nВведите новое название или отправьте - чтобы оставить текущее:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_title)
+
+def admin_change_competition_title(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите название конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_title)
+        return
+
+    title = message.text.strip()
+
+    if title != "-":
+        if not title:
+            bot.send_message(
+                message.chat.id,
+                "❌ Название конкурса не может быть пустым"
+            )
+            bot.register_next_step_handler(message, admin_change_competition_title)
+            return
+
+        user_data[message.chat.id]["admin_competition"]["title"] = title
+        user_data[message.chat.id]["admin_competition"]["name"] = title
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущее описание:\n{escape(user_data[message.chat.id]['admin_competition'].get('description') or '')}\n\nВведите новое описание или отправьте - чтобы оставить текущее:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_description)
+
+def admin_change_competition_description(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите описание конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_description)
+        return
+
+    description = message.text.strip()
+
+    if description != "-":
+        if not description:
+            bot.send_message(
+                message.chat.id,
+                "❌ Описание конкурса не может быть пустым"
+            )
+            bot.register_next_step_handler(message, admin_change_competition_description)
+            return
+
+        user_data[message.chat.id]["admin_competition"]["description"] = description
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущее положение:\n{escape(user_data[message.chat.id]['admin_competition'].get('rules_file') or 'Не загружено')}\n\nВведите новый путь к положению или отправьте - чтобы оставить текущее:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_rules)
+
+def admin_change_competition_rules(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите путь к положению текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_rules)
+        return
+
+    rules_file = message.text.strip()
+
+    if rules_file != "-":
+        user_data[message.chat.id]["admin_competition"]["rules_file"] = rules_file or None
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущая дата:\n{escape(user_data[message.chat.id]['admin_competition'].get('date') or '')}\n\nВведите новую дату или отправьте - чтобы оставить текущую:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_date)
+
+def admin_change_competition_date(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите дату проведения текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_date)
+        return
+
+    date = message.text.strip()
+
+    if date != "-":
+        if not date:
+            bot.send_message(
+                message.chat.id,
+                "❌ Дата проведения не может быть пустой"
+            )
+            bot.register_next_step_handler(message, admin_change_competition_date)
+            return
+
+        user_data[message.chat.id]["admin_competition"]["date"] = date
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущее место:\n{escape(user_data[message.chat.id]['admin_competition'].get('place') or '')}\n\nВведите новое место или отправьте - чтобы оставить текущее:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_place)
+
+def admin_change_competition_place(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите место проведения текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_place)
+        return
+
+    place = message.text.strip()
+
+    if place != "-":
+        if not place:
+            bot.send_message(
+                message.chat.id,
+                "❌ Место проведения не может быть пустым"
+            )
+            bot.register_next_step_handler(message, admin_change_competition_place)
+            return
+
+        user_data[message.chat.id]["admin_competition"]["place"] = place
+
+    msg = bot.send_message(
+        message.chat.id,
+        f"Текущая стоимость:\n{escape(user_data[message.chat.id]['admin_competition'].get('price') or 'Не указана')}\n\nВведите новую стоимость или отправьте - чтобы оставить текущую:"
+    )
+    bot.register_next_step_handler(msg, admin_change_competition_price)
+
+def admin_change_competition_price(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите стоимость участия текстом"
+        )
+        bot.register_next_step_handler(message, admin_change_competition_price)
+        return
+
+    price = message.text.strip()
+
+    if price != "-":
+        user_data[message.chat.id]["admin_competition"]["price"] = price
+
+    competition_id = user_data[message.chat.id]["admin_competition_id"]
+    COMPETITIONS[competition_id] = user_data[message.chat.id]["admin_competition"]
+
+    user_data[message.chat.id].pop("admin_competition_id", None)
+    user_data[message.chat.id].pop("admin_competition", None)
+
+    bot.send_message(
+        message.chat.id,
+        f"✅ Конкурс {competition_id} изменен"
+    )
+
+    bot.send_message(
+        message.chat.id,
+        admin_competitions_text(),
+        reply_markup=admin_competitions_menu()
+    )
+
+def admin_delete_competition_id(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите ID конкурса текстом"
+        )
+        bot.register_next_step_handler(message, admin_delete_competition_id)
+        return
+
+    competition_id = message.text.strip()
+
+    if competition_id not in COMPETITIONS:
+        bot.send_message(
+            message.chat.id,
+            "❌ Конкурс не найден"
+        )
+        return
+
+    del COMPETITIONS[competition_id]
+
+    bot.send_message(
+        message.chat.id,
+        f"🗑 Конкурс {competition_id} удален"
+    )
+
+    bot.send_message(
+        message.chat.id,
+        admin_competitions_text(),
+        reply_markup=admin_competitions_menu()
+    )
 
 def admin_add_faq_question(message):
     if not admin_check(message):
@@ -458,38 +974,21 @@ def callback_message(callback):
         👇 Выберите интересующий вас раздел в меню ниже:''',
                 callback.message.chat.id,
                 callback.message.message_id, reply_markup= back_to_info_menu())
-    elif callback.data == 'competition_1':
+    elif callback.data.startswith('competition_'):
+        competition = COMPETITIONS.get(callback.data)
+
+        if not competition:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Конкурс не найден"
+            )
+            return
+
+        user_data.setdefault(callback.message.chat.id, {})
+        user_data[callback.message.chat.id]["selected_competition"] = callback.data
 
         bot.edit_message_text(
-            '''🏆 VIII Международный многожанровый конкурс-фестиваль
-«СОДРУЖЕСТВО ТАЛАНТОВ»
-
-📍 Место проведения:
-г. Павлодар, ул. Ломова 64
-ПГУ им. С. Торайгырова
-
-📅 Дата проведения:
-20 июня 2026 года
-
-⏳ Приём заявок:
-до 10 июня 2026 года
-
-🎭 Направления конкурса:
-• Хореография
-• Вокал
-• Инструментальное искусство
-
-👥 Возрастные категории:
-от 3 до 18 лет
-
-🏅 Каждый участник получает награду.
-🎁 Руководителям вручаются благодарственные письма.
-💰 Призовой фонд — 300 000 ₸
-
-💳 Стоимость участия:
-от 6 000 ₸ до 15 000 ₸ в зависимости от категории участника.
-
-👇 Выберите дальнейшее действие:''',
+            competition_text(competition),
             callback.message.chat.id,
             callback.message.message_id, reply_markup = competition_1_menu()
         )
@@ -501,66 +1000,37 @@ def callback_message(callback):
             callback.message.message_id, reply_markup = back_to_competition_menu())
 
     elif callback.data  == 'bid':
+        competition_id, competition = get_current_competition(callback.message.chat.id)
+
+        if not competition:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Конкурс не найден"
+            )
+            return
+
+        user_data.setdefault(callback.message.chat.id, {})
+        user_data[callback.message.chat.id]["selected_competition"] = competition_id
 
         bot.edit_message_text(
-            '''📝 Регистрация участника(-ов)
-
-Для подачи заявки на конкурс "СОДРУЖЕСТВО ТАЛАНТОВ" подготовьте следующую информацию:
-
-📌 Данные, которые потребуются:
-🏙 Город
-🏫 Название коллектива / школы / учреждения
-🎵 Название номера
-🎭 Жанр номера
-👥 Количество участников в номере
-🎂 Возрастная категория
-⏱ Хронометраж выступления(в минутах)
-👤 ФИО руководителя / хореографа
-📞 Контактный номер WhatsApp 
-📞 Ваш e-mail
-👥 Список участников (ФИО каждого участника)
-🎧 Музыкальный файл номера (формат MP3)
-
-После начала регистрации бот последовательно запросит все необходимые данные. Пожалуйста, подготовьте информацию заранее.
-
-Готовы начать регистрацию?''',
+            bid_info_text(competition),
             callback.message.chat.id,
             callback.message.message_id,
         reply_markup= bid_menu()
         )
 
     elif callback.data == 'back_to_competition1':
+        competition_id, competition = get_current_competition(callback.message.chat.id)
+
+        if not competition:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Конкурс не найден"
+            )
+            return
 
         bot.edit_message_text(
-            '''🏆 VIII Международный многожанровый конкурс-фестиваль
-«СОДРУЖЕСТВО ТАЛАНТОВ»
-
-📍 Место проведения:
-г. Павлодар, ул. Ломова 64
-ПГУ им. С. Торайгырова
-
-📅 Дата проведения:
-20 июня 2026 года
-
-⏳ Приём заявок:
-до 10 июня 2026 года
-
-🎭 Направления конкурса:
-• Хореография
-• Вокал
-• Инструментальное искусство
-
-👥 Возрастные категории:
-от 3 до 18 лет
-
-🏅 Каждый участник получает награду.
-🎁 Руководителям вручаются благодарственные письма.
-💰 Призовой фонд — 300 000 ₸
-
-💳 Стоимость участия:
-от 6 000 ₸ до 15 000 ₸ в зависимости от категории участника.
-
-👇 Выберите дальнейшее действие:''',
+            competition_text(competition),
             callback.message.chat.id,
             callback.message.message_id, reply_markup = back_to_competition1_menu())
     elif callback.data == 'apply':
@@ -570,21 +1040,57 @@ def callback_message(callback):
             callback.message.chat.id,
             callback.message.message_id, reply_markup = apply_menu())
     elif callback.data == 'rules':
-        with open('Artdocuments/ПОЛОЖЕНИЕ СОДРУЖЕСТВО ТАЛАНТОВ.docx', 'rb') as file:
-            bot.send_document(
+        competition_id, competition = get_current_competition(callback.message.chat.id)
+
+        if not competition:
+            bot.send_message(
                 callback.message.chat.id,
-                file,
-                caption='📄 Положение конкурса "Содружество талантов"'
+                "❌ Конкурс не найден"
+            )
+            return
+
+        rules_file = competition.get("rules_file")
+
+        if not rules_file:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Положение конкурса не загружено"
+            )
+            return
+
+        try:
+            with open(rules_file, 'rb') as file:
+                bot.send_document(
+                    callback.message.chat.id,
+                    file,
+                    caption=f'📄 Положение конкурса "{escape(competition.get("title") or "")}"'
+                )
+        except FileNotFoundError:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Файл положения не найден"
             )
 
 
 
     elif callback.data=='registration':
+        competition_id, competition = get_current_competition(callback.message.chat.id)
+
+        if not competition:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Конкурс не найден"
+            )
+            return
+
         user_data[callback.message.chat.id] = {
             "participants": [],
             "current_participant": 1,
             "music_file_id": None,
-            "music_file_name": "Не используется"
+            "music_file_name": "Не используется",
+            "selected_competition": competition_id,
+            "competition_name": competition.get("title"),
+            "competition_date": competition.get("date")
         }
 
         bot.send_message(
@@ -822,7 +1328,8 @@ def callback_message(callback):
         )
 
 
-    elif callback.data.startswith("faq_"):
+
+    elif callback.data.startswith("faq_") and callback.data.split("_")[-1].isdigit():
         faq_id = int(callback.data.split("_")[-1])
         faq = get_faq_by_id(faq_id)
 
@@ -931,6 +1438,47 @@ def callback_message(callback):
             callback.message.message_id,
             reply_markup=contact_menu()
         )
+    elif callback.data == 'admin_competitions':
+        if not admin_check(callback.message):
+            return
+
+        bot.edit_message_text(
+            admin_competitions_text(),
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_competitions_menu()
+        )
+
+    elif callback.data == 'admin_add_competition':
+        if not admin_check(callback.message):
+            return
+
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🏆 Введите название конкурса:"
+        )
+        bot.register_next_step_handler(msg, admin_add_competition_title)
+
+    elif callback.data == 'admin_change_competition':
+        if not admin_check(callback.message):
+            return
+
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "✏️ Введите ID конкурса для изменения:"
+        )
+        bot.register_next_step_handler(msg, admin_change_competition_id)
+
+    elif callback.data == 'admin_delete_competition':
+        if not admin_check(callback.message):
+            return
+
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🗑 Введите ID конкурса для удаления:"
+        )
+        bot.register_next_step_handler(msg, admin_delete_competition_id)
+
     elif callback.data == 'admin_faq':
         if not admin_check(callback.message):
             return
@@ -1302,9 +1850,14 @@ def callback_message(callback):
             "payment": "Ожидает оплаты"
         }
 
-        status_data = callback.data.split("_")
-        request_id = int(status_data[2])
-        status = status_list.get(status_data[3])
+        try:
+            _, _, request_id, status_key = callback.data.split("_")
+            request_id = int(request_id)
+        except ValueError:
+            bot.send_message(callback.message.chat.id, "❌ Ошибка статуса")
+            return
+
+        status = status_list.get(status_key)
 
         if not status:
             bot.send_message(
