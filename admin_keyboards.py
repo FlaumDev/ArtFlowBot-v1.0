@@ -53,6 +53,20 @@ def admin_requests_menu(): # кнопки админ меню
         )
     )
 
+    markup.add(
+        types.InlineKeyboardButton(
+            '🗑 Удалить администратора',
+            callback_data='admin_delete_admin'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📋 Список администраторов',
+            callback_data='admin_list_admins'
+        )
+    )
+
     return markup
 
 def admin_requests_menu_menu(current, total):#кнопки с пагинации админ списка заявок

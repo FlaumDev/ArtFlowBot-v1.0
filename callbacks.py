@@ -8,9 +8,8 @@ from loader import  bot
 from storage import user_data, WhatsApp, COMPETITIONS
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_page_menu
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status, get_all_faq, get_faq_by_id, add_faq, update_faq, delete_faq
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status, get_all_faq, get_faq_by_id, add_faq, update_faq, delete_faq, get_all_telegram_ids, get_all_admins, is_admin, add_admin, delete_admin
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu, admin_competitions_menu
-from commands import ADMIN_IDS
 
 def admin_request_text(request):
     participants = get_participants(request[0])
@@ -185,6 +184,138 @@ def create_requests_excel():
 
     return excel_file
 
+def admin_list_text():
+    admins = get_all_admins()
+
+    if not admins:
+        return "📋 Администраторов пока нет"
+
+    text = "📋 Администраторы\n\n"
+
+    for admin in admins:
+        text += f"ID: {admin[1]}\n"
+
+    return text
+
+def admin_add_admin_id(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите Telegram ID числом"
+        )
+        bot.register_next_step_handler(message, admin_add_admin_id)
+        return
+
+    admin_id = message.text.strip()
+
+    if not admin_id.isdigit():
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите Telegram ID числом"
+        )
+        bot.register_next_step_handler(message, admin_add_admin_id)
+        return
+
+    admin = add_admin(int(admin_id))
+
+    if not admin:
+        bot.send_message(
+            message.chat.id,
+            "✅ Администратор уже добавлен"
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "✅ Администратор добавлен"
+        )
+
+    bot.send_message(
+        message.chat.id,
+        admin_list_text(),
+        reply_markup=admin_requests_menu()
+    )
+
+def admin_delete_admin_id(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите Telegram ID числом"
+        )
+        bot.register_next_step_handler(message, admin_delete_admin_id)
+        return
+
+    admin_id = message.text.strip()
+
+    if not admin_id.isdigit():
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите Telegram ID числом"
+        )
+        bot.register_next_step_handler(message, admin_delete_admin_id)
+        return
+
+    count = delete_admin(int(admin_id))
+
+    if not count:
+        bot.send_message(
+            message.chat.id,
+            "❌ Администратор не найден"
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "🗑 Администратор удален"
+        )
+
+    bot.send_message(
+        message.chat.id,
+        admin_list_text(),
+        reply_markup=admin_requests_menu()
+    )
+
+def admin_send_spam(message):
+    if not admin_check(message):
+        return
+
+    users = get_all_telegram_ids()
+
+    if not users:
+        bot.send_message(
+            message.chat.id,
+            "📋 Нет пользователей для рассылки"
+        )
+        return
+
+    success = 0
+    errors = 0
+
+    for user in users:
+        telegram_id = user[0]
+
+        try:
+            bot.copy_message(
+                telegram_id,
+                message.chat.id,
+                message.message_id
+            )
+            success += 1
+        except Exception:
+            errors += 1
+
+    bot.send_message(
+        message.chat.id,
+        f"""📤 Рассылка завершена
+
+✅ Успешно: {success}
+❌ Ошибок: {errors}"""
+    )
+
 def admin_search_request(message):
     if message.content_type != "text":
         bot.send_message(
@@ -256,7 +387,7 @@ def admin_faq_text(faq):
     return text
 
 def admin_check(message):
-    if message.chat.id not in ADMIN_IDS:
+    if not is_admin(message.chat.id):
         bot.send_message(
             message.chat.id,
             "❌ У вас нет доступа к панели администратора."
@@ -1052,6 +1183,10 @@ def callback_message(callback):
 
     bot.answer_callback_query(callback.id)
 
+    if callback.data.startswith("admin") or callback.data == "back_to_admin_info":
+        if not admin_check(callback.message):
+            return
+
     if callback.data == 'competition':
 
         bot.edit_message_text(
@@ -1609,19 +1744,41 @@ def callback_message(callback):
         bot.register_next_step_handler(msg, admin_change_faq_id)
 
     elif callback.data == 'admin_delete_faq':
-        if not admin_check(callback.message):
-            return
-
         msg = bot.send_message(
             callback.message.chat.id,
             "🗑 Введите ID вопроса для удаления:"
         )
         bot.register_next_step_handler(msg, admin_delete_faq_id)
 
-    elif callback.data == 'admin_choice_request':
-        if not admin_check(callback.message):
-            return
+    elif callback.data == 'admin_spam':
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "📤 Отправьте сообщение для рассылки:"
+        )
+        bot.register_next_step_handler(msg, admin_send_spam)
 
+    elif callback.data == 'admin_add_admin':
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "👱‍♂️ Введите Telegram ID администратора:"
+        )
+        bot.register_next_step_handler(msg, admin_add_admin_id)
+
+    elif callback.data == 'admin_delete_admin':
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🗑 Введите Telegram ID администратора:"
+        )
+        bot.register_next_step_handler(msg, admin_delete_admin_id)
+
+    elif callback.data == 'admin_list_admins':
+        bot.send_message(
+            callback.message.chat.id,
+            admin_list_text(),
+            reply_markup=admin_requests_menu()
+        )
+
+    elif callback.data == 'admin_choice_request':
         excel_file = create_requests_excel()
 
         if not excel_file:
@@ -1826,15 +1983,6 @@ def callback_message(callback):
             reply_markup = admin_stats_menu()
         )
     elif callback.data == "back_to_admin_info":
-        if callback.message.chat.id not in ADMIN_IDS:
-            bot.edit_message_text(
-
-                "❌ У вас нет доступа к панели администратора.",
-                callback.message.chat.id,
-                callback.message.message_id
-            )
-            return
-
         bot.edit_message_text(
 
             "🛠 Панель администратора",

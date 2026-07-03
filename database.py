@@ -84,6 +84,25 @@ def create_tables():
                 )
                 ''')
 
+    cur.execute('''
+                CREATE TABLE IF NOT EXISTS admins
+                (
+                    id
+                    SERIAL PRIMARY KEY,
+                    telegram_id BIGINT UNIQUE,
+                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                ''')
+
+    from commands import ADMIN_IDS
+
+    for admin_id in ADMIN_IDS:
+        cur.execute('''
+        INSERT INTO admins (telegram_id)
+        VALUES (%s)
+        ON CONFLICT (telegram_id) DO NOTHING
+        ''', (admin_id,))
+
     if not faq_table_exists:
         from storage import FAQ
 
@@ -159,6 +178,95 @@ def get_all_requests():
     conn.close()
 
     return requests
+
+def get_all_telegram_ids():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT DISTINCT telegram_id FROM ArtFlow_bid
+    WHERE telegram_id IS NOT NULL
+    ORDER BY telegram_id ASC
+    ''')
+
+    users = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return users
+
+def get_all_admins():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, telegram_id, create_at FROM admins
+    ORDER BY id ASC
+    ''')
+
+    admins = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return admins
+
+def is_admin(telegram_id):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute('''
+        SELECT 1 FROM admins
+        WHERE telegram_id = %s
+        ''', (telegram_id,))
+
+        admin = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        return bool(admin)
+    except Exception:
+        from commands import ADMIN_IDS
+        return telegram_id in ADMIN_IDS
+
+def add_admin(telegram_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    INSERT INTO admins (telegram_id)
+    VALUES (%s)
+    ON CONFLICT (telegram_id) DO NOTHING
+    RETURNING id
+    ''', (telegram_id,))
+
+    admin = cur.fetchone()
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return admin
+
+def delete_admin(telegram_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    DELETE FROM admins
+    WHERE telegram_id = %s
+    ''', (telegram_id,))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
 
 def get_all_faq():
     conn = get_connection()

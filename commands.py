@@ -2,6 +2,7 @@ from loader import bot
 from keyboards import main_menu
 from telebot import types
 from admin_keyboards import admin_requests_menu
+from database import is_admin
 
 
 @bot.message_handler(commands=['start', 'info'])
@@ -26,7 +27,7 @@ ADMIN_IDS = [2087517047]
 @bot.message_handler(commands=["admin"])
 def admin(message):
 
-    if message.chat.id not in ADMIN_IDS:
+    if not is_admin(message.chat.id):
         bot.send_message(
             message.chat.id,
             "❌ У вас нет доступа к панели администратора."
