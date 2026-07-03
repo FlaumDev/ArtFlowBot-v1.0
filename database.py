@@ -24,6 +24,15 @@ def create_tables():
     cur = conn.cursor()
 
     cur.execute('''
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = current_schema()
+        AND table_name = 'faq'
+    )
+    ''')
+    faq_table_exists = cur.fetchone()[0]
+
+    cur.execute('''
                 CREATE TABLE IF NOT EXISTS ArtFlow_bid
                 (
                     id
@@ -63,6 +72,26 @@ def create_tables():
                     CASCADE
                 )    
                 ''')
+
+    cur.execute('''
+                CREATE TABLE IF NOT EXISTS faq
+                (
+                    id
+                    SERIAL PRIMARY KEY,
+                    question TEXT,
+                    answer TEXT,
+                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                ''')
+
+    if not faq_table_exists:
+        from storage import FAQ
+
+        for faq in FAQ.values():
+            cur.execute('''
+            INSERT INTO faq (question, answer)
+            VALUES (%s, %s)
+            ''', (faq["question"], faq["answer"]))
 
     conn.commit()
     cur.close()
@@ -130,6 +159,92 @@ def get_all_requests():
     conn.close()
 
     return requests
+
+def get_all_faq():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, question, answer FROM faq
+    ORDER BY id ASC
+    ''')
+
+    faq = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return faq
+
+def get_faq_by_id(faq_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, question, answer FROM faq
+    WHERE id = %s
+    ''', (faq_id,))
+
+    faq = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return faq
+
+def add_faq(question, answer):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    INSERT INTO faq (question, answer)
+    VALUES (%s, %s)
+    RETURNING id
+    ''', (question, answer))
+
+    faq_id = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return faq_id
+
+def update_faq(faq_id, question, answer):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    UPDATE faq
+    SET question = %s,
+        answer = %s
+    WHERE id = %s
+    ''', (question, answer, faq_id))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
+
+def delete_faq(faq_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    DELETE FROM faq
+    WHERE id = %s
+    ''', (faq_id,))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
 
 def get_request_by_id(bid_id):
     conn = get_connection()

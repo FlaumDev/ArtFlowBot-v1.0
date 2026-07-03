@@ -1,5 +1,5 @@
 from telebot import types
-from storage import FAQ
+from database import get_all_faq
 
 def main_menu():
     markup = types.InlineKeyboardMarkup()
@@ -229,31 +229,47 @@ def contact_menu2():
 
 
 def faq_menu():
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(FAQ["faq_1"]["question"], callback_data = 'faq_1'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_2"]["question"], callback_data = 'faq_2'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_3"]["question"], callback_data = 'faq_3'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_4"]["question"], callback_data = 'faq_4'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_5"]["question"], callback_data = 'faq_5'))
-    btn_left = types.InlineKeyboardButton('⬅️', callback_data = 'none')
-    btn_middle = types.InlineKeyboardButton(f'Стр. 1/2', callback_data = 'none')
-    btn_right = types.InlineKeyboardButton('➡️', callback_data='faqpage_2')
-    markup.row(btn_left, btn_middle, btn_right)
-
-    return markup
-
-
+    return faq_page_menu(1)
 
 def faq_menu2():
+    return faq_page_menu(2)
+
+def faq_page_menu(page):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(FAQ["faq_6"]["question"], callback_data = 'faq_6'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_7"]["question"], callback_data = 'faq_7'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_8"]["question"], callback_data = 'faq_8'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_9"]["question"], callback_data = 'faq_9'))
-    markup.add(types.InlineKeyboardButton(FAQ["faq_10"]["question"], callback_data = 'faq_10'))
-    btn_left = types.InlineKeyboardButton('⬅️', callback_data='faqpage_1')
-    btn_middle = types.InlineKeyboardButton(f'Стр. 2/2', callback_data = 'none')
-    btn_right = types.InlineKeyboardButton('➡️', callback_data='none')
+
+    faq = get_all_faq()
+    per_page = 5
+
+    if not faq:
+        markup.add(types.InlineKeyboardButton('Вопросов пока нет', callback_data = 'none'))
+        return markup
+
+    total_pages = (len(faq) + per_page - 1) // per_page
+
+    if page > total_pages:
+        page = total_pages
+
+    if page < 1:
+        page = 1
+
+    start = (page - 1) * per_page
+    end = start + per_page
+
+    for item in faq[start:end]:
+        markup.add(types.InlineKeyboardButton(item[1], callback_data = f'faq_{item[0]}'))
+
+    if page > 1:
+        btn_left = types.InlineKeyboardButton('⬅️', callback_data = f'faqpage_{page - 1}')
+    else:
+        btn_left = types.InlineKeyboardButton('⬅️', callback_data = 'none')
+
+    btn_middle = types.InlineKeyboardButton(f'Стр. {page}/{total_pages}', callback_data = 'none')
+
+    if page < total_pages:
+        btn_right = types.InlineKeyboardButton('➡️', callback_data = f'faqpage_{page + 1}')
+    else:
+        btn_right = types.InlineKeyboardButton('➡️', callback_data = 'none')
+
     markup.row(btn_left, btn_middle, btn_right)
     return markup
 

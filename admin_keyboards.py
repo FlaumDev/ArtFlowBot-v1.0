@@ -225,3 +225,43 @@ def admin_status_menu(request_id):
     markup.add(types.InlineKeyboardButton('Назад', callback_data=f"admin_open_request_{request_id}"))
 
     return markup
+
+def admin_faq_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📋 Обновить список',
+            callback_data='admin_faq'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '➕ Добавить вопрос',
+            callback_data='admin_add_faq'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '✏️ Изменить вопрос',
+            callback_data='admin_change_faq'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🗑 Удалить вопрос',
+            callback_data='admin_delete_faq'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🔙 Назад',
+            callback_data='back_to_admin_info'
+        )
+    )
+
+    return markup
