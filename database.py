@@ -94,6 +94,17 @@ def create_tables():
                 )
                 ''')
 
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT UNIQUE NOT NULL,
+        username TEXT,
+        first_name TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
+        '''
+    )
+
     from commands import ADMIN_IDS
 
     for admin_id in ADMIN_IDS:
@@ -184,7 +195,7 @@ def get_all_telegram_ids():
     cur = conn.cursor()
 
     cur.execute('''
-    SELECT DISTINCT telegram_id FROM ArtFlow_bid
+    SELECT telegram_id FROM users
     WHERE telegram_id IS NOT NULL
     ORDER BY telegram_id ASC
     ''')
@@ -494,3 +505,21 @@ def request_time(days):
     conn.close()
 
     return count
+
+def save_user(message):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    INSERT INTO users (telegram_id, username, first_name)
+    VALUES (%s, %s, %s)
+    ON CONFLICT (telegram_id) DO NOTHING
+    ''', (
+        message.chat.id,
+        message.from_user.username,
+        message.from_user.first_name
+    ))
+
+    conn.commit()
+    cur.close()
+    conn.close()

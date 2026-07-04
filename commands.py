@@ -2,11 +2,12 @@ from loader import bot
 from keyboards import main_menu
 from telebot import types
 from admin_keyboards import admin_requests_menu
-from database import is_admin
+from database import is_admin, save_user
 
 
 @bot.message_handler(commands=['start', 'info'])
 def main(message):
+    save_user(message)
 
 
     bot.send_message(message.chat.id, '''👋 Добро пожаловать в ArtFlow!
