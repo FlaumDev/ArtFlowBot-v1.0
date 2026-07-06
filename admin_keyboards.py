@@ -48,22 +48,8 @@ def admin_requests_menu(): # кнопки админ меню
 
     markup.add(
         types.InlineKeyboardButton(
-            '👱‍♂️ Добавить администратора',
-            callback_data='admin_add_admin'
-        )
-    )
-
-    markup.add(
-        types.InlineKeyboardButton(
-            '🗑 Удалить администратора',
-            callback_data='admin_delete_admin'
-        )
-    )
-
-    markup.add(
-        types.InlineKeyboardButton(
-            '📋 Список администраторов',
-            callback_data='admin_list_admins'
+            '👨‍🦱 Администраторы',
+            callback_data='admins_func'
         )
     )
 
@@ -320,4 +306,29 @@ def admin_search_menu():
     markup.add(types.InlineKeyboardButton("📞 Поиск по WhatsApp", callback_data = 'admin_search_whatsapp'))
     markup.add(types.InlineKeyboardButton("✉️ Поиск по email", callback_data = 'admin_search_email'))
 
+    return markup
+
+def admins_func_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '👱‍♂️ Добавить администратора',
+            callback_data='admin_add_admin'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🗑 Удалить администратора',
+            callback_data='admin_delete_admin'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '📋 Список администраторов',
+            callback_data='admin_list_admins'
+        )
+    )
     return markup

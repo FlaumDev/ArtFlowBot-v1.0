@@ -91,7 +91,8 @@ def create_tables():
                     id
                     SERIAL PRIMARY KEY,
                     telegram_id BIGINT UNIQUE,
-                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    name TEXT
                 )
                 ''')
 
@@ -213,7 +214,7 @@ def get_all_admins():
     cur = conn.cursor()
 
     cur.execute('''
-    SELECT id, telegram_id, create_at FROM admins
+    SELECT * FROM admins
     ORDER BY id ASC
     ''')
 
@@ -244,16 +245,16 @@ def is_admin(telegram_id):
         from commands import ADMIN_IDS
         return telegram_id in ADMIN_IDS
 
-def add_admin(telegram_id):
+def add_admin(telegram_id, name = None):
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute('''
-    INSERT INTO admins (telegram_id)
-    VALUES (%s)
+    INSERT INTO admins (telegram_id, name)
+    VALUES (%s, %s)
     ON CONFLICT (telegram_id) DO NOTHING
     RETURNING id
-    ''', (telegram_id,))
+    ''', (telegram_id,name))
 
     admin = cur.fetchone()
 
@@ -596,3 +597,24 @@ def search_request_by_participant(participant_name):
     conn.close()
 
     return requests
+
+def get_admin_name(telegram_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+                SELECT name FROM admins
+                WHERE telegram_id = %s
+                """, (telegram_id,))
+
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if row:
+        return row[0]
+
+    return None
+
+
