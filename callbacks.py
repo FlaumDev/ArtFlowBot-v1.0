@@ -527,14 +527,6 @@ def admin_competitions_text():
 
     return text
 
-def admin_participant_search_participant(message):
-    if message.content_type != "text":
-        bot.send_message(
-            message.chat.id,
-            "❌ Введите ID вопроса числом"
-        )
-        bot.register_next_step_handler(message, admin_participant_search_participant)
-        return
 
 
 
@@ -1864,11 +1856,8 @@ def callback_message(callback):
         )
 
     elif callback.data == 'admin_search':
-        msg = bot.send_message(
-            callback.message.chat.id,
-            "🔎 Выберите вариант поиска заявки"
-        )
-        bot.edit_message_text(msg,
+
+        bot.edit_message_text("🔎 Выберите вариант поиска заявки",
                               callback.message.chat.id,
                               callback.message.message_id,
                               reply_markup = admin_search_menu())
@@ -1900,7 +1889,7 @@ def callback_message(callback):
             "🔍 Введите ФИО участника или его часть:"
         )
 
-        bot.register_next_step_handler(msg, admin_participant_search_participant)
+        bot.register_next_step_handler(msg, admin_search_participant)
 
 
     elif callback.data == 'admin_requests':

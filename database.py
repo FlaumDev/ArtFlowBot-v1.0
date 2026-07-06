@@ -407,23 +407,6 @@ def search_requests(search_text):
 
     return requests
 
-def search_requests_by_participant(participant_name):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute('''
-    SELECT DISTINCT ArtFlow_bid.* FROM ArtFlow_bid
-    JOIN participants ON participants.bid_id = ArtFlow_bid.id
-    WHERE participants.participant_name ILIKE %s
-    ORDER BY ArtFlow_bid.id ASC
-    ''', (f"%{participant_name}%",))
-
-    requests = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return requests
 
 def delete_request(bid_id):
     conn = get_connection()
@@ -538,6 +521,7 @@ def normalized_phone(phone):
 
     return digits
 
+
 def search_request_by_id(request_id):
     conn = get_connection()
     cur = conn.cursor()
@@ -580,11 +564,13 @@ def search_request_by_whatsapp(phone):
     conn = get_connection()
     cur = conn.cursor()
 
+    phone = normalized_phone(phone)
+
     cur.execute("""
     SELECT * FROM ArtFlow_bid
         WHERE regexp_replace(WhatsApp_number, '[^0-9]', '', 'g') ILIKE %s
         ORDER BY id ASC
-    """, (f"%{normalized_phone}%",))
+    """, (f"%{phone}%",))
 
     requests = cur.fetchall()
 

@@ -317,7 +317,7 @@ def admin_search_menu():
     markup = types.InlineKeyboardMarkup()
 
     markup.add(types.InlineKeyboardButton("🆔 Поиск по ID", callback_data = 'admin_search_id'))
-    markup.add(types.InlineKeyboardButton("📞 Поиск по WhatsApp", callback_data = 'admin_search_email'))
-    markup.add(types.InlineKeyboardButton("✉️ Поиск по email", callback_data = 'admin_search_whatsapp'))
+    markup.add(types.InlineKeyboardButton("📞 Поиск по WhatsApp", callback_data = 'admin_search_whatsapp'))
+    markup.add(types.InlineKeyboardButton("✉️ Поиск по email", callback_data = 'admin_search_email'))
 
     return markup
