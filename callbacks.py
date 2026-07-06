@@ -2137,7 +2137,7 @@ def callback_message(callback):
             )
             return
 
-        if not request[14]:
+        if request[14] == 'Не используется':
             bot.send_message(
                 callback.message.chat.id,
                 "❌ Музыкальный файл не прикреплен"
