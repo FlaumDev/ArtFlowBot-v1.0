@@ -8,8 +8,118 @@ from loader import  bot
 from storage import user_data, WhatsApp, COMPETITIONS
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from keyboards import competition_menu, contact_menu, competition_1_menu,back_to_info_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu, request_navigation, contact_menu1, contact_menu2, faq_menu, faq_page_menu
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status, get_all_faq, get_faq_by_id, add_faq, update_faq, delete_faq, get_all_telegram_ids, get_all_admins, is_admin, add_admin, delete_admin
-from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu, admin_competitions_menu
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, all_count, all_participants, requests_status, request_time, get_connection, search_requests, search_requests_by_participant, get_request_by_id, delete_request, update_request_status, get_all_faq, get_faq_by_id, add_faq, update_faq, delete_faq, get_all_telegram_ids, get_all_admins, is_admin, add_admin, delete_admin, search_request_by_id, search_request_by_email, search_request_by_whatsapp, search_requests_by_participant
+from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu, admin_competitions_menu, admin_search_menu
+
+
+
+
+                       #        обработчики поиска заявок и участников!!!
+
+def admin_search_request_by_id(message):
+    if message.content_type != "text":
+        msg = bot.send_message(message.chat.id, "❌ Введите ID заявки текстом")
+        bot.register_next_step_handler(msg, admin_search_request_by_id)
+        return
+
+    search_text = message.text.strip()
+
+    if not search_text.isdigit():
+        msg = bot.send_message(message.chat.id, "❌ ID должен быть числом")
+        bot.register_next_step_handler(msg, admin_search_request_by_id)
+        return
+
+    requests = search_request_by_id(int(search_text))
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "🆔 Результаты поиска по ID"
+    )
+
+
+def admin_search_request_by_email(message):
+    if message.content_type != "text":
+        msg = bot.send_message(message.chat.id, "❌ Введите e-mail текстом")
+        bot.register_next_step_handler(msg, admin_search_request_by_email)
+        return
+
+    email = message.text.strip()
+
+    if not email:
+        msg = bot.send_message(message.chat.id, "❌ E-mail не может быть пустым")
+        bot.register_next_step_handler(msg, admin_search_request_by_email)
+        return
+
+    requests = search_request_by_email(email)
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "📧 Результаты поиска по e-mail"
+    )
+
+
+def admin_search_request_by_whatsapp(message):
+    if message.content_type != "text":
+        msg = bot.send_message(message.chat.id, "❌ Введите WhatsApp текстом")
+        bot.register_next_step_handler(msg, admin_search_request_by_whatsapp)
+        return
+
+    phone = message.text.strip()
+
+    if not phone:
+        msg = bot.send_message(message.chat.id, "❌ WhatsApp не может быть пустым")
+        bot.register_next_step_handler(msg, admin_search_request_by_whatsapp)
+        return
+
+    requests = search_request_by_whatsapp(phone)
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "📱 Результаты поиска по WhatsApp"
+    )
+
+
+def admin_search_participant(message):
+    if not admin_check(message):
+        return
+
+    if message.content_type != "text":
+        msg = bot.send_message(
+            message.chat.id,
+            "❌ Введите ФИО участника текстом"
+        )
+        bot.register_next_step_handler(msg, admin_search_participant)
+        return
+
+    participant_name = message.text.strip()
+
+    if not participant_name:
+        msg = bot.send_message(
+            message.chat.id,
+            "❌ ФИО участника не может быть пустым"
+        )
+        bot.register_next_step_handler(msg, admin_search_participant)
+        return
+
+    requests = search_requests_by_participant(participant_name)
+
+    admin_send_found_requests(
+        message,
+        requests,
+        "🔍 Результаты поиска участника"
+    )
+
+
+
+
+
+
+
+
+
 
 def admin_request_text(request):
     participants = get_participants(request[0])
@@ -316,60 +426,6 @@ def admin_send_spam(message):
 ❌ Ошибок: {errors}"""
     )
 
-def admin_search_request(message):
-    if message.content_type != "text":
-        bot.send_message(
-            message.chat.id,
-            "❌ Введите ID заявки, e-mail или WhatsApp текстом"
-        )
-        bot.register_next_step_handler(message, admin_search_request)
-        return
-
-    search_text = message.text.strip()
-
-    if not search_text:
-        bot.send_message(
-            message.chat.id,
-            "❌ Поисковый запрос не может быть пустым"
-        )
-        bot.register_next_step_handler(message, admin_search_request)
-        return
-
-    requests = search_requests(search_text)
-
-    admin_send_found_requests(
-        message,
-        requests,
-        "🔎 Результаты поиска заявки"
-    )
-
-def admin_search_participant(message):
-    if message.content_type != "text":
-        bot.send_message(
-            message.chat.id,
-            "❌ Введите ФИО участника текстом"
-        )
-        bot.register_next_step_handler(message, admin_search_participant)
-        return
-
-    participant_name = message.text.strip()
-
-    if not participant_name:
-        bot.send_message(
-            message.chat.id,
-            "❌ ФИО участника не может быть пустым"
-        )
-        bot.register_next_step_handler(message, admin_search_participant)
-        return
-
-    requests = search_requests_by_participant(participant_name)
-
-    admin_send_found_requests(
-        message,
-        requests,
-        "🔍 Результаты поиска участника"
-    )
-
 def admin_faq_text(faq):
     if not faq:
         return "❓ FAQ пока пуст\n\nДобавьте первый вопрос через админ-панель."
@@ -470,6 +526,19 @@ def admin_competitions_text():
 """
 
     return text
+
+def admin_participant_search_participant(message):
+    if message.content_type != "text":
+        bot.send_message(
+            message.chat.id,
+            "❌ Введите ID вопроса числом"
+        )
+        bot.register_next_step_handler(message, admin_participant_search_participant)
+        return
+
+
+
+
 
 def get_next_competition_id():
     numbers = []
@@ -1797,16 +1866,42 @@ def callback_message(callback):
     elif callback.data == 'admin_search':
         msg = bot.send_message(
             callback.message.chat.id,
-            "🔎 Введите ID заявки, e-mail или WhatsApp:"
+            "🔎 Выберите вариант поиска заявки"
         )
-        bot.register_next_step_handler(msg, admin_search_request)
+        bot.edit_message_text(msg,
+                              callback.message.chat.id,
+                              callback.message.message_id,
+                              reply_markup = admin_search_menu())
+
+    elif callback.data == "admin_search_id":
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "🆔 Введите ID заявки:"
+        )
+        bot.register_next_step_handler(msg, admin_search_request_by_id)
+
+    elif callback.data == "admin_search_email":
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "📧 Введите e-mail:"
+        )
+        bot.register_next_step_handler(msg, admin_search_request_by_email)
+
+    elif callback.data == "admin_search_whatsapp":
+        msg = bot.send_message(
+            callback.message.chat.id,
+            "📱 Введите WhatsApp:\n\nМожно писать так:\n+7 702 394 12 34\n87023941234\n77023941234"
+        )
+        bot.register_next_step_handler(msg, admin_search_request_by_whatsapp)
 
     elif callback.data == 'admin_participants_search':
         msg = bot.send_message(
             callback.message.chat.id,
-            "🔍 Введите ФИО участника:"
+            "🔍 Введите ФИО участника или его часть:"
         )
-        bot.register_next_step_handler(msg, admin_search_participant)
+
+        bot.register_next_step_handler(msg, admin_participant_search_participant)
+
 
     elif callback.data == 'admin_requests':
         requests = get_all_requests()

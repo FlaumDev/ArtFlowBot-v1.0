@@ -1,6 +1,7 @@
 import psycopg2
 from dotenv import load_dotenv
 import os
+import re
 load_dotenv()
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
@@ -523,3 +524,89 @@ def save_user(message):
     conn.commit()
     cur.close()
     conn.close()
+
+
+
+def normalized_phone(phone):
+    digits = re.sub(r"\D", "", phone)
+
+    if digits.startswith("8") and len(digits) == 11:
+        digits = "7" + digits[1:]
+
+    if digits.startswith("7") and len(digits) == 11:
+        return digits
+
+    return digits
+
+def search_request_by_id(request_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT * FROM ArtFlow_bid
+        WHERE id = %s
+    
+    """, (request_id,))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests
+
+
+
+def search_request_by_email(email):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT * FROM ArtFlow_bid
+    WHERE email ILIKE %s
+    ORDER BY id ASC
+    """, (f"%{email}%",))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests
+
+
+
+def search_request_by_whatsapp(phone):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT * FROM ArtFlow_bid
+        WHERE regexp_replace(WhatsApp_number, '[^0-9]', '', 'g') ILIKE %s
+        ORDER BY id ASC
+    """, (f"%{normalized_phone}%",))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests
+
+def search_request_by_participant(participant_name):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT DISTINCT a.* FROM ArtFlow_bid a
+    JOIN participants p ON a.id = p.bid_id
+    WHERE p.participant_name ILIKE %s
+    ORDER BY a.id ASC
+    """, (f"%{participant_name}%",))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return requests

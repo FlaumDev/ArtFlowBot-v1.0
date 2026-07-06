@@ -147,7 +147,7 @@ def admin_request_navigation(current, total):
     markup.add(
         types.InlineKeyboardButton(
             '🔎 Поиск заявки',
-            callback_data="admin_search"
+            callback_data="admin_search",
         )
     )
 
@@ -310,5 +310,14 @@ def admin_competitions_menu():
             callback_data='back_to_admin_info'
         )
     )
+
+    return markup
+
+def admin_search_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(types.InlineKeyboardButton("🆔 Поиск по ID", callback_data = 'admin_search_id'))
+    markup.add(types.InlineKeyboardButton("📞 Поиск по WhatsApp", callback_data = 'admin_search_email'))
+    markup.add(types.InlineKeyboardButton("✉️ Поиск по email", callback_data = 'admin_search_whatsapp'))
 
     return markup
