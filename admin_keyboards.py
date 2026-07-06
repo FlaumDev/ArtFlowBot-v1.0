@@ -146,13 +146,6 @@ def admin_request_navigation(current, total):
 
     markup.add(
         types.InlineKeyboardButton(
-            "🏠 Главное меню",
-            callback_data="back_to_info"
-        )
-    )
-
-    markup.add(
-        types.InlineKeyboardButton(
             '🔎 Поиск заявки',
             callback_data="admin_search"
         )
