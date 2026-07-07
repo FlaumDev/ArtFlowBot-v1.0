@@ -12,3 +12,38 @@ from database import get_user_requests, get_participants, get_all_requests, get_
 from admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_stats_menu, admin_status_menu, admin_faq_menu, admin_competitions_menu, admin_search_menu, admins_func_menu
 
 
+def admin_request_func(callback):
+    requests = get_all_requests()
+
+    if not requests:
+        bot.send_message(
+            callback.message.chat.id,
+            "📋 пока нет заявок"
+        )
+        return
+    request = requests[0]
+    participants = get_participants(request[0])
+    participants_text = "\n".join(
+        f"• {participant[0]}"
+        for participant in participants
+    )
+    bot.edit_message_text(
+        f"""📋 Заявка №{request[0]}
+    🏙 Город: {request[2]}
+    🏫 Коллектив: {request[3]}
+    🎵 Номер: {request[4]}
+    🎭 Жанр: {request[5]}
+    👥 Участников: {request[6]} чел.
+    🎂 Возрастная категория: {request[7]}        
+    ⏱️ Хронометраж {request[8]} мин.
+    👨‍🏫 Руководитель: {request[9]}
+    📞 WhatsApp: {request[10]}
+    📧 E-mail: {request[11]}    
+    🎵 Музыкальный файл: {request[15]}    
+
+    📊 Статус: {request[12]}
+        """,
+        callback.message.chat.id,
+        callback.message.message_id,
+        reply_markup=admin_requests_menu_menu(1, len(requests))
+    )
