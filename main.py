@@ -1,5 +1,5 @@
 from loader import bot
-
+import callbacks
 from database import create_tables
 
 if __name__ == '__main__':

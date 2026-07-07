@@ -1,7 +1,7 @@
 from loader import bot
-from keyboards import main_menu
+from keyboards.user_keyboards import main_menu
 from telebot import types
-from admin_keyboards import admin_requests_menu
+from keyboards.admin_keyboards import admin_requests_menu
 from database import is_admin, save_user
 
 

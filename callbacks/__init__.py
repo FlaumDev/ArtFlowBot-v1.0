@@ -1,0 +1,6 @@
+from callbacks import admin_callbacks
+from callbacks import competition_callbacks
+from callbacks import registration_callbacks
+from callbacks import requests_callbacks
+from callbacks import faq_callbacks
+from callbacks import menu_callbacks

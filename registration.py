@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardMarkup
 
 from loader import bot
 from storage import user_data
-from keyboards import end_registration_menu, exit_registration_menu, age_menu, genre_menu
+from keyboards.user_keyboards import end_registration_menu, exit_registration_menu, age_menu, genre_menu
 import re
 from html import escape
 
