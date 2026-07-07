@@ -12,7 +12,7 @@ def admin_list_text():
     text = "📋 Администраторы\n\n"
 
     for admin in admins:
-        text += f"ID: {admin[1]}\n"
+        text += f"ID: {admin[1]} ! Имя: {admin[3] or '-'}\n"
 
     return text
 
@@ -127,7 +127,8 @@ def admin_send_spam(message):
                 message.message_id
             )
             success += 1
-        except Exception:
+        except Exception as e:
+            print(f"Ошибка рассылки пользователю {telegram_id}: {e}")
             errors += 1
 
     bot.send_message(
@@ -160,6 +161,7 @@ def admin_check(message):
     "admins_func",
 ))
 def admin_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data.startswith("admin") or callback.data == "back_to_admin_info":
         if not admin_check(callback.message):
             return
@@ -233,7 +235,7 @@ def admin_callback_message(callback):
             elif genre.lower() == "инструментальный":
                 genre3 += 1
             else:
-                print("Неизвестный статус:", genre)
+                print("Неизвестный жанр:", genre)
 
 
 

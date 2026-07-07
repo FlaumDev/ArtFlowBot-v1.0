@@ -308,6 +308,7 @@ def admin_delete_faq_id(message):
     or callback.data.startswith("faqpage_")
 ))
 def faq_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data.startswith("admin") or callback.data == "back_to_admin_info":
         if not admin_check(callback.message):
             return

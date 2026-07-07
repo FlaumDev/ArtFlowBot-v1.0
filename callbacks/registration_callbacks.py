@@ -12,6 +12,7 @@ from callbacks.competition_callbacks import get_current_competition
     or callback.data.startswith("mus_")
 ))
 def registration_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data=='registration':
         competition_id, competition = get_current_competition(callback.message.chat.id)
 
@@ -37,7 +38,8 @@ def registration_callback_message(callback):
             "🏙 Шаг 1 из 12\nВведите город:"
         )
 
-        bot.register_next_step_handler(callback.message, city)
+        msg = bot.send_message(callback.message.chat.id, "🏙 Шаг 1 из 12\nВведите город:")
+        bot.register_next_step_handler(msg, city)
 
 
 
@@ -55,14 +57,8 @@ def registration_callback_message(callback):
 
         user_data[user_id]["age"] = ages[callback.data]
 
-        bot.send_message(
-            user_id, "⏱️ Шаг 7 из 12\nВведите хронометраж выступления (в минутах):"
-        )
-
-        bot.register_next_step_handler(
-            callback.message,
-            performance_time
-        )
+        msg = bot.send_message(user_id, "⏱️ Шаг 7 из 12\nВведите хронометраж выступления (в минутах):")
+        bot.register_next_step_handler(msg, performance_time)
 
 
     elif callback.data.startswith("genre_"):
@@ -88,9 +84,7 @@ def registration_callback_message(callback):
 
     elif callback.data  == 'confirm_reg':
         if callback.message.chat.id not in user_data:
-            bot.send_message(
-                callback.message.chat.id, "❌ Данные заявки не найдены. Пожалуйста, заполните заявку заново."
-            )
+            bot.send_message(callback.message.chat.id, "❌ Данные заявки не найдены. Пожалуйста, заполните заявку заново.")
             return
 
         data = user_data[callback.message.chat.id]

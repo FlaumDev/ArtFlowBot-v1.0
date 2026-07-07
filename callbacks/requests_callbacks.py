@@ -391,6 +391,7 @@ def admin_search_participant(message):
     or callback.data.startswith("admin_status_")
 ))
 def requests_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data.startswith("admin") or callback.data == "back_to_admin_info":
         if not admin_check(callback.message):
             return
@@ -598,7 +599,7 @@ def requests_callback_message(callback):
             )
             return
 
-        if request[14] == 'Не используется':
+        if not request[14] or request[14] == 'Не используется':
             bot.send_message(
                 callback.message.chat.id,
                 "❌ Музыкальный файл не прикреплен"

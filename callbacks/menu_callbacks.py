@@ -14,6 +14,7 @@ from keyboards.user_keyboards import back_to_info_menu, contact_menu, contact_me
     "back_to_contact",
 ))
 def menu_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data == 'back_to_info':
             bot.edit_message_text(
                 '''👋 Добро пожаловать в ArtFlow!
@@ -127,3 +128,7 @@ def menu_callback_message(callback):
             callback.message.message_id,
             reply_markup=contact_menu()
         )
+
+@bot.callback_query_handler(func=lambda callback: callback.data == "none")
+def none_callback(callback):
+    bot.answer_callback_query(callback.id)

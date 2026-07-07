@@ -557,6 +557,7 @@ def admin_delete_competition_id(message):
     or callback.data.startswith("competition_")
 ))
 def competition_callback_message(callback):
+    bot.answer_callback_query(callback.id)
     if callback.data.startswith("admin") or callback.data == "back_to_admin_info":
         if not admin_check(callback.message):
             return
