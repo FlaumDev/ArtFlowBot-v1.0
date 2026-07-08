@@ -19,6 +19,160 @@ def get_connection():
     )
 
 
+def competition_row_to_dict(competition):
+    return {
+        "title": competition[1],
+        "name": competition[1],
+        "description": competition[2],
+        "rules_file": competition[3],
+        "date": competition[4],
+        "place": competition[5],
+        "price": competition[6]
+    }
+
+
+def get_all_competitions():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, name, description, document, date, place, price
+    FROM competitions
+    ORDER BY id ASC
+    ''')
+
+    competitions = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return {
+        f"competition_{competition[0]}": competition_row_to_dict(competition)
+        for competition in competitions
+    }
+
+
+def get_competition_by_id(competition_id):
+    if not competition_id.startswith("competition_"):
+        return None
+
+    competition_number = competition_id.split("_")[-1]
+
+    if not competition_number.isdigit():
+        return None
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, name, description, document, date, place, price
+    FROM competitions
+    WHERE id = %s
+    ''', (int(competition_number),))
+
+    competition = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not competition:
+        return None
+
+    return competition_row_to_dict(competition)
+
+
+def add_competition(competition):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    INSERT INTO competitions (name, description, document, date, place, price)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    RETURNING id
+    ''', (
+        competition.get("title") or competition.get("name"),
+        competition.get("description"),
+        competition.get("rules_file"),
+        competition.get("date"),
+        competition.get("place"),
+        competition.get("price")
+    ))
+
+    competition_id = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return f"competition_{competition_id}"
+
+
+def update_competition(competition_id, competition):
+    if not competition_id.startswith("competition_"):
+        return 0
+
+    competition_number = competition_id.split("_")[-1]
+
+    if not competition_number.isdigit():
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    UPDATE competitions
+    SET name = %s,
+        description = %s,
+        document = %s,
+        date = %s,
+        place = %s,
+        price = %s
+    WHERE id = %s
+    ''', (
+        competition.get("title") or competition.get("name"),
+        competition.get("description"),
+        competition.get("rules_file"),
+        competition.get("date"),
+        competition.get("place"),
+        competition.get("price"),
+        int(competition_number)
+    ))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
+
+
+def delete_competition(competition_id):
+    if not competition_id.startswith("competition_"):
+        return 0
+
+    competition_number = competition_id.split("_")[-1]
+
+    if not competition_number.isdigit():
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    DELETE FROM competitions
+    WHERE id = %s
+    ''', (int(competition_number),))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
+
+
 
 def create_tables():
     conn = get_connection()
@@ -106,6 +260,29 @@ def create_tables():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
         '''
     )
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS competitions (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        description TEXT,
+        document TEXT,
+        date TEXT,
+        place TEXT,
+        price TEXT,
+        create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+                ALTER TABLE ArtFlow_bid
+                    ADD COLUMN IF NOT EXISTS competition_id INTEGER;
+                """)
+
+    cur.execute("""
+                ALTER TABLE ArtFlow_bid
+                    ADD COLUMN IF NOT EXISTS competition_name TEXT;
+                """)
 
     from commands import ADMIN_IDS
 
@@ -616,5 +793,4 @@ def get_admin_name(telegram_id):
         return row[0]
 
     return None
-
 

@@ -1,9 +1,10 @@
 from html import escape
 from loader import bot
-from storage import user_data, COMPETITIONS
+from storage import user_data
 from keyboards.user_keyboards import competition_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu
 from keyboards.admin_keyboards import admin_competitions_menu
 from callbacks.admin_callbacks import admin_check
+from database import get_all_competitions, get_competition_by_id, add_competition, update_competition, delete_competition
 
 
 def get_current_competition(user_id):
@@ -12,10 +13,12 @@ def get_current_competition(user_id):
     if user_id in user_data:
         competition_id = user_data[user_id].get("selected_competition", competition_id)
 
-    if competition_id not in COMPETITIONS and COMPETITIONS:
-        competition_id = next(iter(COMPETITIONS))
+    competitions = get_all_competitions()
 
-    return competition_id, COMPETITIONS.get(competition_id)
+    if competition_id not in competitions and competitions:
+        competition_id = next(iter(competitions))
+
+    return competition_id, competitions.get(competition_id)
 
 
 def competition_text(competition):
@@ -64,12 +67,14 @@ def bid_info_text(competition):
 
 
 def admin_competitions_text():
-    if not COMPETITIONS:
+    competitions = get_all_competitions()
+
+    if not competitions:
         return "🏆 Конкурсов пока нет\n\nДобавьте первый конкурс через админ-панель."
 
     text = "🏆 Конкурсы\n\n"
 
-    for competition_id, competition in COMPETITIONS.items():
+    for competition_id, competition in competitions.items():
         price = competition.get("price") or "Не указана"
         rules_file = competition.get("rules_file") or "Не загружено"
 
@@ -88,7 +93,7 @@ def admin_competitions_text():
 def get_next_competition_id():
     numbers = []
 
-    for competition_id in COMPETITIONS:
+    for competition_id in get_all_competitions():
         number = competition_id.split("_")[-1]
 
         if number.isdigit():
@@ -270,8 +275,7 @@ def admin_add_competition_price(message):
 
     user_data[message.chat.id]["admin_competition"]["price"] = price
 
-    competition_id = get_next_competition_id()
-    COMPETITIONS[competition_id] = user_data[message.chat.id]["admin_competition"]
+    competition_id = add_competition(user_data[message.chat.id]["admin_competition"])
     user_data[message.chat.id].pop("admin_competition", None)
 
     bot.send_message(
@@ -299,8 +303,9 @@ def admin_change_competition_id(message):
         return
 
     competition_id = message.text.strip()
+    competition = get_competition_by_id(competition_id)
 
-    if competition_id not in COMPETITIONS:
+    if not competition:
         bot.send_message(
             message.chat.id,
             "❌ Конкурс не найден"
@@ -309,11 +314,11 @@ def admin_change_competition_id(message):
 
     user_data.setdefault(message.chat.id, {})
     user_data[message.chat.id]["admin_competition_id"] = competition_id
-    user_data[message.chat.id]["admin_competition"] = COMPETITIONS[competition_id].copy()
+    user_data[message.chat.id]["admin_competition"] = competition.copy()
 
     msg = bot.send_message(
         message.chat.id,
-        f"Текущее название:\n{escape(COMPETITIONS[competition_id].get('title') or '')}\n\nВведите новое название или отправьте - чтобы оставить текущее:"
+        f"Текущее название:\n{escape(competition.get('title') or '')}\n\nВведите новое название или отправьте - чтобы оставить текущее:"
     )
     bot.register_next_step_handler(msg, admin_change_competition_title)
 
@@ -489,7 +494,7 @@ def admin_change_competition_price(message):
         user_data[message.chat.id]["admin_competition"]["price"] = price
 
     competition_id = user_data[message.chat.id]["admin_competition_id"]
-    COMPETITIONS[competition_id] = user_data[message.chat.id]["admin_competition"]
+    update_competition(competition_id, user_data[message.chat.id]["admin_competition"])
 
     user_data[message.chat.id].pop("admin_competition_id", None)
     user_data[message.chat.id].pop("admin_competition", None)
@@ -519,15 +524,16 @@ def admin_delete_competition_id(message):
         return
 
     competition_id = message.text.strip()
+    competition = get_competition_by_id(competition_id)
 
-    if competition_id not in COMPETITIONS:
+    if not competition:
         bot.send_message(
             message.chat.id,
             "❌ Конкурс не найден"
         )
         return
 
-    del COMPETITIONS[competition_id]
+    delete_competition(competition_id)
 
     bot.send_message(
         message.chat.id,
@@ -569,7 +575,7 @@ def competition_callback_message(callback):
             callback.message.chat.id,
             callback.message.message_id, reply_markup = competition_menu())
     if callback.data.startswith('competition_'):
-        competition = COMPETITIONS.get(callback.data)
+        competition = get_competition_by_id(callback.data)
 
         if not competition:
             bot.send_message(

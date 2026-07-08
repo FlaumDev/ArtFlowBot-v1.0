@@ -1,6 +1,5 @@
 from telebot import types
-from database import get_all_faq
-from storage import COMPETITIONS
+from database import get_all_faq, get_all_competitions
 
 
 def main_menu():
@@ -74,15 +73,16 @@ def age_menu():
 
 def competition_menu():
     markup = types.InlineKeyboardMarkup()
+    competitions = get_all_competitions()
 
-    for competition_id, competition in COMPETITIONS.items():
+    for competition_id, competition in competitions.items():
         markup.add(
             types.InlineKeyboardButton(
                 competition["title"], callback_data=competition_id
             )
         )
 
-    if not COMPETITIONS:
+    if not competitions:
         markup.add(
             types.InlineKeyboardButton(
                 'Конкурсов пока нет', callback_data='none'
@@ -149,15 +149,16 @@ def back_to_competition1_menu():
 
 def apply_menu():
     markup = types.InlineKeyboardMarkup()
+    competitions = get_all_competitions()
 
-    for competition_id, competition in COMPETITIONS.items():
+    for competition_id, competition in competitions.items():
         markup.add(
             types.InlineKeyboardButton(
                 competition["title"], callback_data=competition_id
             )
         )
 
-    if not COMPETITIONS:
+    if not competitions:
         markup.add(
             types.InlineKeyboardButton(
                 'Конкурсов пока нет', callback_data='none'
