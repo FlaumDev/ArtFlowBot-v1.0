@@ -33,10 +33,7 @@ def registration_callback_message(callback):
             "competition_date": competition.get("date")
         }
 
-        bot.send_message(
-            callback.message.chat.id,
-            "🏙 Шаг 1 из 12\nВведите город:"
-        )
+
 
         msg = bot.send_message(callback.message.chat.id, "🏙 Шаг 1 из 12\nВведите город:")
         bot.register_next_step_handler(msg, city)
@@ -73,12 +70,12 @@ def registration_callback_message(callback):
 
         user_data[user_id]["genre"] = genres[callback.data]
 
-        bot.send_message(
+        msg = bot.send_message(
             user_id,
             "👥 Шаг 5 из 12\nВведите количество участников в номере"
         )
 
-        bot.register_next_step_handler(callback.message, number_of_participants)
+        bot.register_next_step_handler(msg, number_of_participants)
 
 
 
@@ -108,8 +105,11 @@ def registration_callback_message(callback):
                                      WhatsApp_number,
                                      email,
                                      music_file_id,
-                                     music_file_name)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+                                     music_file_name,
+                                     competition_id,
+                                     competition_name
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
             ''',
             (
                 callback.message.chat.id,
@@ -124,7 +124,9 @@ def registration_callback_message(callback):
                 data['WhatsApp'],
                 data['email'],
                 data['music_file_id'],
-                data['music_file_name']
+                data['music_file_name'],
+                int(data['selected_competition'].split("_")[-1]),
+                data['competition_name']
             )
         )
 

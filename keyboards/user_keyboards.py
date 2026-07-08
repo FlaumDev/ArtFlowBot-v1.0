@@ -1,4 +1,4 @@
-from telebot import types
+from telebot import types, callback_data
 from database import get_all_faq, get_all_competitions
 
 
@@ -205,6 +205,8 @@ def request_navigation(current, total):
 
 
     markup.row(*buttons)
+
+    markup.add(types.InlineKeyboardButton('👥 Участники', callback_data = f'request_participants_{current}'))
 
 
     markup.add(

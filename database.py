@@ -206,7 +206,9 @@ def create_tables():
                     status TEXT DEFAULT 'На рассмотрении',
                     create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     music_file_id TEXT,
-                    music_file_name TEXT
+                    music_file_name TEXT,
+                    competition_id INTEGER,
+                    competition_name TEXT
                 )
                 ''')
 
@@ -274,15 +276,7 @@ def create_tables():
         )
     """)
 
-    cur.execute("""
-                ALTER TABLE ArtFlow_bid
-                    ADD COLUMN IF NOT EXISTS competition_id INTEGER;
-                """)
-
-    cur.execute("""
-                ALTER TABLE ArtFlow_bid
-                    ADD COLUMN IF NOT EXISTS competition_name TEXT;
-                """)
+    
 
     from commands import ADMIN_IDS
 

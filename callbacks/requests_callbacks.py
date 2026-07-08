@@ -21,6 +21,8 @@ def admin_request_text(request):
         participants_text = "—"
 
     return f"""📋 Заявка №{request[0]}
+    🏆 Конкурс: {request[17] or "Не указан"}
+    
 🏙 Город: {request[2]}
 🏫 Коллектив: {request[3]}
 🎵 Номер: {request[4]}
@@ -102,6 +104,8 @@ def create_requests_excel():
 
     headers = [
         "ID",
+        "Конкурс ID",
+        "Конкурс",
         "Telegram ID",
         "Город",
         "Коллектив",
@@ -134,6 +138,8 @@ def create_requests_excel():
 
         sheet.append([
             request[0],
+            request[16],
+            request[17],
             request[1],
             request[2],
             request[3],
@@ -171,7 +177,9 @@ def create_requests_excel():
         "M": 18,
         "N": 22,
         "O": 32,
-        "P": 38
+        "P": 38,
+        "Q": 32,
+        "R": 38
     }
 
     for column, width in widths.items():
@@ -204,6 +212,8 @@ def admin_request_func(callback):
     )
     bot.edit_message_text(
         f"""📋 Заявка №{request[0]}
+        🏆 Конкурс: {request[17] or "Не указан"}
+        
     🏙 Город: {request[2]}
     🏫 Коллектив: {request[3]}
     🎵 Номер: {request[4]}
@@ -386,6 +396,7 @@ def admin_search_participant(message):
         "admin_change_status",
     )
     or callback.data.startswith("request_page_")
+    or callback.data.startswith("request_participants_")
     or callback.data.startswith("admin_request_page_")
     or callback.data.startswith("admin_open_request_")
     or callback.data.startswith("admin_status_")
@@ -415,6 +426,7 @@ def requests_callback_message(callback):
         bot.send_message(
                 callback.message.chat.id,
                 f"""📋 Заявка №{request[0]}
+                🏆 Конкурс: {request[17] or "Не указан"}
 
 📊 Статус: {request[12]}
 
@@ -456,6 +468,7 @@ def requests_callback_message(callback):
         )
         bot.edit_message_text(
             f"""📋 Заявка №{request[0]}
+            🏆 Конкурс: {request[17] or "Не указан"}
 
 📊 Статус: {request[12]}
 
@@ -475,6 +488,44 @@ def requests_callback_message(callback):
             reply_markup = request_navigation(page, len(requests)
         )
     )
+
+
+
+    elif callback.data.startswith("request_participants_"):
+        page = int(callback.data.split("_")[-1])
+
+        requests = get_user_requests(callback.message.chat.id)
+
+        if not requests:
+            bot.send_message(callback.message.chat.id, "📋 У вас пока нет заявок")
+            return
+
+        if page > len(requests):
+            page = len(requests)
+
+        if page < 1:
+            page = 1
+
+        request = requests[page - 1]
+
+        participants = get_participants(request[0])
+
+        if not participants:
+            participants_text = "Участники не указаны"
+        else:
+            participants_text = "\n".join(
+                f"• {participant[0]}"
+                for participant in participants
+            )
+
+        bot.send_message(
+            callback.message.chat.id,
+            f"""👥 Участники заявки №{request[0]}
+
+    {participants_text}"""
+        )
+
+
 
     elif callback.data == 'admin_choice_request':
         excel_file = create_requests_excel()
