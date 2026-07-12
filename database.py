@@ -272,7 +272,16 @@ def create_tables():
         date TEXT,
         place TEXT,
         price TEXT,
-        create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        event_date DATE,
+        application_deadline DATE,
+        city TEXT,
+        short_description TEXT,
+        directions TEXT,
+        poster_url TEXT,
+        rules_url TEXT,
+        is_published BOOLEAN NOT NULL DEFAULT FALSE,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
