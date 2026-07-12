@@ -31,6 +31,23 @@ def competition_row_to_dict(competition):
     }
 
 
+def _extract_competition_number(competition_id):
+    if not isinstance(competition_id, str):
+        return None
+
+    prefix = "competition_"
+
+    if not competition_id.startswith(prefix):
+        return None
+
+    competition_number = competition_id[len(prefix):]
+
+    if not competition_number.isdigit():
+        return None
+
+    return int(competition_number)
+
+
 def get_all_competitions():
     conn = get_connection()
     cur = conn.cursor()
@@ -136,6 +153,114 @@ def update_competition(competition_id, competition):
         competition.get("place"),
         competition.get("price"),
         int(competition_number)
+    ))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
+
+
+def get_competition_web_data(competition_id):
+    competition_number = _extract_competition_number(competition_id)
+
+    if competition_number is None:
+        return None
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, name, event_date, application_deadline, city,
+           short_description, directions, poster_url, rules_url,
+           is_published, updated_at
+    FROM competitions
+    WHERE id = %s
+    ''', (competition_number,))
+
+    competition = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not competition:
+        return None
+
+    return {
+        "id": competition[0],
+        "name": competition[1],
+        "event_date": competition[2],
+        "application_deadline": competition[3],
+        "city": competition[4],
+        "short_description": competition[5],
+        "directions": competition[6],
+        "poster_url": competition[7],
+        "rules_url": competition[8],
+        "is_published": competition[9],
+        "updated_at": competition[10]
+    }
+
+
+def update_competition_web_data(competition_id, web_data):
+    competition_number = _extract_competition_number(competition_id)
+
+    if competition_number is None:
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    UPDATE competitions
+    SET event_date = %s,
+        application_deadline = %s,
+        city = %s,
+        short_description = %s,
+        directions = %s,
+        poster_url = %s,
+        rules_url = %s,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = %s
+    ''', (
+        web_data.get("event_date"),
+        web_data.get("application_deadline"),
+        web_data.get("city"),
+        web_data.get("short_description"),
+        web_data.get("directions"),
+        web_data.get("poster_url"),
+        web_data.get("rules_url"),
+        competition_number
+    ))
+
+    count = cur.rowcount
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return count
+
+
+def set_competition_publication(competition_id, is_published):
+    competition_number = _extract_competition_number(competition_id)
+
+    if competition_number is None:
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    UPDATE competitions
+    SET is_published = %s,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = %s
+    ''', (
+        is_published,
+        competition_number
     ))
 
     count = cur.rowcount
