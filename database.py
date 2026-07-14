@@ -31,21 +31,17 @@ def competition_row_to_dict(competition):
     }
 
 
-def _extract_competition_number(competition_id):
-    if not isinstance(competition_id, str):
-        return None
-
-    prefix = "competition_"
-
-    if not competition_id.startswith(prefix):
-        return None
-
-    competition_number = competition_id[len(prefix):]
-
-    if not competition_number.isdigit():
-        return None
-
-    return int(competition_number)
+WEB_COMPETITION_COLUMNS = (
+    "event_date",
+    "application_deadline",
+    "city",
+    "short_description",
+    "directions",
+    "poster_url",
+    "rules_url",
+    "is_published",
+    "updated_at"
+)
 
 
 def get_all_competitions():
@@ -164,112 +160,145 @@ def update_competition(competition_id, competition):
     return count
 
 
-def get_competition_web_data(competition_id):
-    competition_number = _extract_competition_number(competition_id)
+def competitions_web_columns_ready():
+    conn = get_connection()
+    cur = conn.cursor()
 
-    if competition_number is None:
+    try:
+        cur.execute('''
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+            AND table_name = %s
+            AND column_name = ANY(%s)
+        ''', ("competitions", list(WEB_COMPETITION_COLUMNS)))
+
+        existing_columns = {row[0] for row in cur.fetchall()}
+
+        return set(WEB_COMPETITION_COLUMNS).issubset(existing_columns)
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_competition_web_data_by_id(competition_id):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
         return None
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute('''
-    SELECT id, name, event_date, application_deadline, city,
-           short_description, directions, poster_url, rules_url,
-           is_published, updated_at
-    FROM competitions
-    WHERE id = %s
-    ''', (competition_number,))
+    try:
+        cur.execute('''
+        SELECT id, name, event_date, application_deadline, city,
+               short_description, directions, poster_url, rules_url,
+               is_published, updated_at
+        FROM competitions
+        WHERE id = %s
+        ''', (competition_id,))
 
-    competition = cur.fetchone()
+        competition = cur.fetchone()
 
-    cur.close()
-    conn.close()
+        if not competition:
+            return None
 
-    if not competition:
-        return None
+        return {
+            "id": competition[0],
+            "name": competition[1],
+            "event_date": competition[2],
+            "application_deadline": competition[3],
+            "city": competition[4],
+            "short_description": competition[5],
+            "directions": competition[6],
+            "poster_url": competition[7],
+            "rules_url": competition[8],
+            "is_published": competition[9],
+            "updated_at": competition[10]
+        }
+    finally:
+        cur.close()
+        conn.close()
 
-    return {
-        "id": competition[0],
-        "name": competition[1],
-        "event_date": competition[2],
-        "application_deadline": competition[3],
-        "city": competition[4],
-        "short_description": competition[5],
-        "directions": competition[6],
-        "poster_url": competition[7],
-        "rules_url": competition[8],
-        "is_published": competition[9],
-        "updated_at": competition[10]
-    }
 
-
-def update_competition_web_data(competition_id, web_data):
-    competition_number = _extract_competition_number(competition_id)
-
-    if competition_number is None:
+def update_competition_web_data_by_id(
+        competition_id,
+        event_date,
+        application_deadline,
+        city,
+        short_description,
+        directions,
+        poster_url,
+        rules_url
+):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
         return 0
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute('''
-    UPDATE competitions
-    SET event_date = %s,
-        application_deadline = %s,
-        city = %s,
-        short_description = %s,
-        directions = %s,
-        poster_url = %s,
-        rules_url = %s,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = %s
-    ''', (
-        web_data.get("event_date"),
-        web_data.get("application_deadline"),
-        web_data.get("city"),
-        web_data.get("short_description"),
-        web_data.get("directions"),
-        web_data.get("poster_url"),
-        web_data.get("rules_url"),
-        competition_number
-    ))
+    try:
+        cur.execute('''
+        UPDATE competitions
+        SET event_date = %s,
+            application_deadline = %s,
+            city = %s,
+            short_description = %s,
+            directions = %s,
+            poster_url = %s,
+            rules_url = %s,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+        ''', (
+            event_date,
+            application_deadline,
+            city,
+            short_description,
+            directions,
+            poster_url,
+            rules_url,
+            competition_id
+        ))
 
-    count = cur.rowcount
+        count = cur.rowcount
+        conn.commit()
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        return count
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
-    return count
 
-
-def set_competition_publication(competition_id, is_published):
-    competition_number = _extract_competition_number(competition_id)
-
-    if competition_number is None:
+def set_competition_publication_by_id(competition_id, is_published):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
         return 0
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute('''
-    UPDATE competitions
-    SET is_published = %s,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = %s
-    ''', (
-        is_published,
-        competition_number
-    ))
+    try:
+        cur.execute('''
+        UPDATE competitions
+        SET is_published = %s,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+        ''', (
+            is_published,
+            competition_id
+        ))
 
-    count = cur.rowcount
+        count = cur.rowcount
+        conn.commit()
 
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return count
+        return count
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
 
 def delete_competition(competition_id):
@@ -921,4 +950,3 @@ def get_admin_name(telegram_id):
         return row[0]
 
     return None
-

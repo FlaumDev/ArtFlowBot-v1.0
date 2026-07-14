@@ -292,8 +292,67 @@ def admin_competitions_menu():
 
     markup.add(
         types.InlineKeyboardButton(
+            '🌐 Данные для сайта',
+            callback_data='admin_competition_web_data'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '👁 Публикация на сайте',
+            callback_data='admin_competition_publication'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
             '🔙 Назад',
             callback_data='back_to_admin_info'
+        )
+    )
+
+    return markup
+
+def admin_competition_web_confirm_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '✅ Сохранить',
+            callback_data='admin_web_save'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '❌ Отмена',
+            callback_data='admin_web_cancel'
+        )
+    )
+
+    return markup
+
+def admin_competition_publication_menu():
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '✅ Опубликовать',
+            callback_data='admin_web_publish'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '🚫 Снять с публикации',
+            callback_data='admin_web_unpublish'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            '❌ Отмена',
+            callback_data='admin_web_cancel'
         )
     )
 
