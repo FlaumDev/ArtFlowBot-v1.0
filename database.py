@@ -951,12 +951,3 @@ def get_admin_name(telegram_id):
         return row[0]
 
     return None
-
-def digma_function:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("""SELECT * FROM ArtFlow_bid""")
-    count = cur.fetchall()
-    cur.close()
-    conn.close()
-    return count
