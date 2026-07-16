@@ -5,6 +5,7 @@ from storage import user_data
 from keyboards.user_keyboards import competition_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu
 from keyboards.admin_keyboards import admin_competitions_menu, admin_competition_web_confirm_menu, admin_competition_publication_menu
 from callbacks.admin_callbacks import admin_check
+from competition_messages import competition_text
 from database import (
     get_all_competitions,
     get_competition_by_id,
@@ -59,25 +60,6 @@ def get_current_competition(user_id):
         competition_id = next(iter(competitions))
 
     return competition_id, competitions.get(competition_id)
-
-
-def competition_text(competition):
-    price = competition.get("price") or "Не указана"
-
-    return f"""🏆 {escape(competition.get("name") or competition.get("title") or "")}
-
-📍 Место проведения:
-{escape(competition.get("place") or "Не указано")}
-
-📅 Дата проведения:
-{escape(competition.get("date") or "Не указана")}
-
-{escape(competition.get("description") or "")}
-
-💳 Стоимость участия:
-{escape(price)}
-
-👇 Выберите дальнейшее действие:"""
 
 
 def bid_info_text(competition):

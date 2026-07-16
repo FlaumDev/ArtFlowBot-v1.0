@@ -38,6 +38,11 @@ The bot allows participants to submit applications, manage their requests, and i
 - Navigation between sections
 - User-friendly registration flow
 
+### 🔗 ArtFlowWeb Deep Links
+- Supports links from ArtFlowWeb in the format `https://t.me/{BOT_USERNAME}?start=competition_{id}`
+- Opens only existing published competitions
+- Keeps the existing registration flow and saves the selected competition with the application
+
 ---
 
 ## 🛠 Technologies
