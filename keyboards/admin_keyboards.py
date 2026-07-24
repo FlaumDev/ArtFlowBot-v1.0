@@ -292,7 +292,7 @@ def admin_competitions_menu():
 
     markup.add(
         types.InlineKeyboardButton(
-            '🌐 Данные для сайта',
+            '📝 Изменить данные для сайта',
             callback_data='admin_competition_web_data'
         )
     )
@@ -337,14 +337,14 @@ def admin_competition_publication_menu():
 
     markup.add(
         types.InlineKeyboardButton(
-            '✅ Опубликовать',
+            '🚀 Опубликовать на сайте',
             callback_data='admin_web_publish'
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            '🚫 Снять с публикации',
+            '🙈 Снять с сайта',
             callback_data='admin_web_unpublish'
         )
     )

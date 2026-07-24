@@ -2,6 +2,7 @@ from loader import bot
 from storage import user_data
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from callbacks.competition_callbacks import get_current_competition
+from application_notifications import send_application_notifications
 
 
 @bot.callback_query_handler(func=lambda callback: (
@@ -109,7 +110,7 @@ def registration_callback_message(callback):
                                      competition_id,
                                      competition_name
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, create_at
             ''',
             (
                 callback.message.chat.id,
@@ -130,7 +131,9 @@ def registration_callback_message(callback):
             )
         )
 
-        bid_id = cur.fetchone()[0]
+        bid = cur.fetchone()
+        bid_id = bid[0]
+        data["create_at"] = bid[1]
 
 
         for participant in data['participants']:
@@ -142,6 +145,7 @@ def registration_callback_message(callback):
         conn.commit()
         cur.close()
         conn.close()
+        send_application_notifications(bot, callback.message, bid_id, data)
         end_registration(callback.message)
 
         user_data.pop(callback.message.chat.id, None)

@@ -206,9 +206,9 @@ def format_web_value(value):
 
 def publication_status_text(is_published):
     if is_published:
-        return "опубликован"
+        return "🚀 опубликован"
 
-    return "не опубликован"
+    return "🙈 не опубликован"
 
 
 def web_data_text(web_data, title="🌐 Данные конкурса для сайта"):
@@ -380,7 +380,7 @@ def show_admin_web_data_preview(chat_id):
 
     bot.send_message(
         chat_id,
-        web_data_text(state["pending"], "🌐 Предпросмотр данных для сайта"),
+        web_data_text(state["pending"], "📝 Предпросмотр данных для сайта"),
         reply_markup=admin_competition_web_confirm_menu()
     )
 
@@ -664,7 +664,7 @@ def change_admin_publication(chat_id, is_published):
     elif is_published:
         send_admin_competitions_panel(chat_id, "✅ Конкурс опубликован на сайте.")
     else:
-        send_admin_competitions_panel(chat_id, "🚫 Конкурс снят с публикации.")
+        send_admin_competitions_panel(chat_id, "🙈 Конкурс снят с сайта.")
 
 
 def admin_add_competition_title(message):
@@ -1292,7 +1292,7 @@ def competition_callback_message(callback):
         clear_admin_web_state(callback.message.chat.id)
         msg = bot.send_message(
             callback.message.chat.id,
-            f"🌐 Введите числовой ID конкурса для заполнения данных сайта или напишите «{WEB_CANCEL_WORD}»:"
+            f"📝 Введите числовой ID конкурса для заполнения данных сайта или напишите «{WEB_CANCEL_WORD}»:"
         )
         bot.register_next_step_handler(msg, admin_web_data_id_step)
 
