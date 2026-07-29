@@ -292,6 +292,13 @@ def admin_competitions_menu():
 
     markup.add(
         types.InlineKeyboardButton(
+            '👥 Участники',
+            callback_data='admin_competition_participants'
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
             '📝 Изменить данные для сайта',
             callback_data='admin_competition_web_data'
         )

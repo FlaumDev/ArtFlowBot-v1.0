@@ -1,5 +1,6 @@
 from datetime import datetime
 from html import escape
+from telebot import types
 from loader import bot
 from storage import user_data
 from keyboards.user_keyboards import competition_menu, competition_1_menu, back_to_competition_menu, bid_menu, back_to_competition1_menu, apply_menu
@@ -15,7 +16,10 @@ from database import (
     competitions_web_columns_ready,
     get_competition_web_data_by_id,
     update_competition_web_data_by_id,
-    set_competition_publication_by_id
+    set_competition_publication_by_id,
+    get_competition_requests_count,
+    get_competition_requests,
+    get_competition_request_by_id
 )
 
 
@@ -46,6 +50,8 @@ WEB_REQUIRED_FOR_PUBLICATION = (
     ("short_description", "Краткое описание"),
     ("directions", "Направления"),
 )
+
+ADMIN_COMPETITION_REQUESTS_PER_PAGE = 8
 
 
 def get_current_competition(user_id):
@@ -192,6 +198,324 @@ def is_cancel_text(message):
 def cancel_admin_web_action(chat_id):
     clear_admin_web_state(chat_id)
     send_admin_competitions_panel(chat_id, "❌ Действие отменено.")
+
+
+def format_admin_value(value, empty="Не указано"):
+    if value is None or value == "":
+        return empty
+
+    if hasattr(value, "strftime"):
+        return value.strftime("%d.%m.%Y %H:%M")
+
+    return str(value)
+
+
+def admin_competition_request_button_text(request):
+    title = (
+        request.get("name_team")
+        or request.get("number_name")
+        or request.get("SFP_supervisor")
+        or request.get("email")
+    )
+
+    if not title:
+        return f"Заявка №{request.get('id')}"
+
+    title = " ".join(str(title).split())
+
+    if len(title) > 44:
+        title = f"{title[:41]}..."
+
+    return f"{request.get('id')}. {title}"
+
+
+def admin_competition_participants_text(competition, count):
+    return f"""👥 Участники конкурса
+
+🏆 {escape(format_admin_value(competition.get("title")))}
+📋 Всего заявок: {count}
+
+Выберите заявку для просмотра:"""
+
+
+def admin_competition_empty_participants_text(competition):
+    return f"""👥 Участников пока нет
+
+🏆 {escape(format_admin_value(competition.get("title")))}
+
+На этот конкурс ещё не подано ни одной заявки."""
+
+
+def admin_competition_participants_menu(competition_id, requests, page, total_pages):
+    markup = types.InlineKeyboardMarkup()
+
+    for request in requests:
+        markup.add(
+            types.InlineKeyboardButton(
+                admin_competition_request_button_text(request),
+                callback_data=f"admin_competition_application_{competition_id}_{request.get('id')}_{page}"
+            )
+        )
+
+    previous_page = page - 1 if page > 1 else page
+    next_page = page + 1 if page < total_pages else page
+
+    markup.row(
+        types.InlineKeyboardButton(
+            "⬅️",
+            callback_data=(
+                f"admin_competition_participants_{competition_id}_{previous_page}"
+                if page > 1
+                else "none"
+            )
+        ),
+        types.InlineKeyboardButton(
+            f"Страница {page}/{total_pages}",
+            callback_data="none"
+        ),
+        types.InlineKeyboardButton(
+            "➡️",
+            callback_data=(
+                f"admin_competition_participants_{competition_id}_{next_page}"
+                if page < total_pages
+                else "none"
+            )
+        )
+    )
+
+    markup.row(
+        types.InlineKeyboardButton("⬅️ Назад", callback_data="admin_competitions"),
+        types.InlineKeyboardButton("🏠 Админ-панель", callback_data="back_to_admin_info")
+    )
+
+    return markup
+
+
+def admin_competition_empty_participants_menu():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("⬅️ Назад", callback_data="admin_competitions"))
+    return markup
+
+
+def admin_competition_application_menu(competition_id, page):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(
+        types.InlineKeyboardButton(
+            "⬅️ К участникам",
+            callback_data=f"admin_competition_participants_{competition_id}_{page}"
+        ),
+        types.InlineKeyboardButton("🏠 Админ-панель", callback_data="back_to_admin_info")
+    )
+    return markup
+
+
+def admin_competition_application_text(request):
+    username = request.get("username")
+    telegram = f"@{username}" if username else "Не указано"
+    participants = request.get("participants") or []
+    participants_text = "\n".join(
+        f"• {escape(format_admin_value(participant, ''))}"
+        for participant in participants
+        if format_admin_value(participant, "")
+    )
+
+    if not participants_text:
+        participants_text = "Не указано"
+
+    return f"""👤 Участник
+
+🆔 Заявка: №{escape(format_admin_value(request.get("id")))}
+🏆 Конкурс: {escape(format_admin_value(request.get("competition_name")))}
+🏙 Город: {escape(format_admin_value(request.get("city")))}
+👥 Коллектив: {escape(format_admin_value(request.get("name_team")))}
+🎵 Номер: {escape(format_admin_value(request.get("number_name")))}
+🎭 Номинация: {escape(format_admin_value(request.get("number_genre")))}
+👥 Количество участников: {escape(format_admin_value(request.get("number_of_participants")))}
+🎂 Возраст: {escape(format_admin_value(request.get("age")))}
+⏱ Хронометраж: {escape(format_admin_value(request.get("performance_time")))}
+👩‍🏫 Руководитель: {escape(format_admin_value(request.get("SFP_supervisor")))}
+📱 WhatsApp: {escape(format_admin_value(request.get("WhatsApp_number")))}
+📧 Email: {escape(format_admin_value(request.get("email")))}
+👤 Telegram: {escape(telegram)}
+🆔 Telegram ID: {escape(format_admin_value(request.get("telegram_id")))}
+🕒 Дата подачи: {escape(format_admin_value(request.get("create_at")))}
+📊 Статус: {escape(format_admin_value(request.get("status")))}
+🎧 Музыкальный файл: {escape(format_admin_value(request.get("music_file_name"), "Не используется"))}
+
+👥 Участники:
+{participants_text}"""
+
+
+def send_or_edit_admin_competition_message(chat_id, message_id, text, reply_markup):
+    if message_id:
+        bot.edit_message_text(
+            text,
+            chat_id,
+            message_id,
+            reply_markup=reply_markup
+        )
+        return
+
+    bot.send_message(
+        chat_id,
+        text,
+        reply_markup=reply_markup
+    )
+
+
+def show_admin_competition_participants(chat_id, message_id, competition_id, page):
+    try:
+        competition = get_competition_by_id(f"competition_{competition_id}")
+
+        if not competition:
+            send_or_edit_admin_competition_message(
+                chat_id,
+                message_id,
+                "❌ Конкурс не найден.",
+                admin_competitions_menu()
+            )
+            return
+
+        count = get_competition_requests_count(competition_id)
+
+        if not count:
+            send_or_edit_admin_competition_message(
+                chat_id,
+                message_id,
+                admin_competition_empty_participants_text(competition),
+                admin_competition_empty_participants_menu()
+            )
+            return
+
+        total_pages = (count + ADMIN_COMPETITION_REQUESTS_PER_PAGE - 1) // ADMIN_COMPETITION_REQUESTS_PER_PAGE
+
+        if page < 1:
+            page = 1
+
+        if page > total_pages:
+            page = total_pages
+
+        offset = (page - 1) * ADMIN_COMPETITION_REQUESTS_PER_PAGE
+        requests = get_competition_requests(
+            competition_id,
+            ADMIN_COMPETITION_REQUESTS_PER_PAGE,
+            offset
+        )
+
+        send_or_edit_admin_competition_message(
+            chat_id,
+            message_id,
+            admin_competition_participants_text(competition, count),
+            admin_competition_participants_menu(competition_id, requests, page, total_pages)
+        )
+    except Exception as error:
+        print(f"Ошибка просмотра участников конкурса: {type(error).__name__}")
+        bot.send_message(
+            chat_id,
+            "❌ Не удалось загрузить участников конкурса. Попробуйте позже."
+        )
+
+
+def show_admin_competition_application(chat_id, message_id, competition_id, request_id, page):
+    markup = admin_competition_application_menu(competition_id, page)
+
+    try:
+        request = get_competition_request_by_id(competition_id, request_id)
+    except Exception as error:
+        print(f"Ошибка просмотра заявки конкурса: {type(error).__name__}")
+        bot.send_message(
+            chat_id,
+            "❌ Не удалось загрузить заявку. Попробуйте позже."
+        )
+        return
+
+    if not request:
+        send_or_edit_admin_competition_message(
+            chat_id,
+            message_id,
+            "⚠️ Заявка не найдена или была удалена.",
+            markup
+        )
+        return
+
+    send_or_edit_admin_competition_message(
+        chat_id,
+        message_id,
+        admin_competition_application_text(request),
+        markup
+    )
+
+
+def parse_admin_competition_participants_callback(callback_data):
+    parts = callback_data.split("_")
+
+    if len(parts) != 5:
+        return None, None
+
+    competition_id = parse_positive_int(parts[-2])
+    page = parse_positive_int(parts[-1])
+
+    return competition_id, page
+
+
+def parse_admin_competition_application_callback(callback_data):
+    parts = callback_data.split("_")
+
+    if len(parts) != 6:
+        return None, None, None
+
+    competition_id = parse_positive_int(parts[-3])
+    request_id = parse_positive_int(parts[-2])
+    page = parse_positive_int(parts[-1])
+
+    return competition_id, request_id, page
+
+
+def admin_competition_participants_id_step(message):
+    if not admin_check(message):
+        return
+
+    if is_cancel_text(message):
+        cancel_admin_web_action(message.chat.id)
+        return
+
+    if message.content_type != "text":
+        msg = bot.send_message(
+            message.chat.id,
+            f"❌ Введите числовой ID конкурса или напишите «{WEB_CANCEL_WORD}»."
+        )
+        bot.register_next_step_handler(msg, admin_competition_participants_id_step)
+        return
+
+    competition_id = parse_positive_int(message.text.strip())
+
+    if competition_id is None:
+        msg = bot.send_message(
+            message.chat.id,
+            f"❌ Введите целое положительное число или напишите «{WEB_CANCEL_WORD}»."
+        )
+        bot.register_next_step_handler(msg, admin_competition_participants_id_step)
+        return
+
+    try:
+        competition = get_competition_by_id(f"competition_{competition_id}")
+    except Exception as error:
+        print(f"Ошибка получения конкурса для участников: {type(error).__name__}")
+        bot.send_message(
+            message.chat.id,
+            "❌ Не удалось загрузить конкурс. Попробуйте позже."
+        )
+        return
+
+    if not competition:
+        msg = bot.send_message(
+            message.chat.id,
+            f"❌ Конкурс не найден. Введите другой числовой ID или напишите «{WEB_CANCEL_WORD}»."
+        )
+        bot.register_next_step_handler(msg, admin_competition_participants_id_step)
+        return
+
+    show_admin_competition_participants(message.chat.id, None, competition_id, 1)
 
 
 def format_web_value(value):
@@ -1124,6 +1448,7 @@ def admin_delete_competition_id(message):
         "admin_add_competition",
         "admin_change_competition",
         "admin_delete_competition",
+        "admin_competition_participants",
         "admin_competition_web_data",
         "admin_competition_publication",
         "admin_web_save",
@@ -1131,6 +1456,8 @@ def admin_delete_competition_id(message):
         "admin_web_publish",
         "admin_web_unpublish",
     )
+    or callback.data.startswith("admin_competition_participants_")
+    or callback.data.startswith("admin_competition_application_")
     or callback.data.startswith("competition_")
 ))
 def competition_callback_message(callback):
@@ -1284,6 +1611,51 @@ def competition_callback_message(callback):
             "🗑 Введите ID конкурса для удаления:"
         )
         bot.register_next_step_handler(msg, admin_delete_competition_id)
+
+    elif callback.data == 'admin_competition_participants':
+        if not admin_check(callback.message):
+            return
+
+        msg = bot.send_message(
+            callback.message.chat.id,
+            f"👥 Введите числовой ID конкурса для просмотра участников или напишите «{WEB_CANCEL_WORD}»:"
+        )
+        bot.register_next_step_handler(msg, admin_competition_participants_id_step)
+
+    elif callback.data.startswith("admin_competition_participants_"):
+        if not admin_check(callback.message):
+            return
+
+        competition_id, page = parse_admin_competition_participants_callback(callback.data)
+
+        if not competition_id or not page:
+            bot.send_message(callback.message.chat.id, "❌ Не удалось открыть список участников.")
+            return
+
+        show_admin_competition_participants(
+            callback.message.chat.id,
+            callback.message.message_id,
+            competition_id,
+            page
+        )
+
+    elif callback.data.startswith("admin_competition_application_"):
+        if not admin_check(callback.message):
+            return
+
+        competition_id, request_id, page = parse_admin_competition_application_callback(callback.data)
+
+        if not competition_id or not request_id or not page:
+            bot.send_message(callback.message.chat.id, "❌ Не удалось открыть заявку.")
+            return
+
+        show_admin_competition_application(
+            callback.message.chat.id,
+            callback.message.message_id,
+            competition_id,
+            request_id,
+            page
+        )
 
     elif callback.data == 'admin_competition_web_data':
         if not admin_check(callback.message):

@@ -718,6 +718,145 @@ def get_request_by_id(bid_id):
 
     return request
 
+
+def competition_request_row_to_dict(request):
+    if not request:
+        return None
+
+    data = {
+        "id": request[0],
+        "telegram_id": request[1],
+        "city": request[2],
+        "name_team": request[3],
+        "number_name": request[4],
+        "number_genre": request[5],
+        "number_of_participants": request[6],
+        "age": request[7],
+        "performance_time": request[8],
+        "SFP_supervisor": request[9],
+        "WhatsApp_number": request[10],
+        "email": request[11],
+        "status": request[12],
+        "create_at": request[13],
+        "music_file_id": request[14],
+        "music_file_name": request[15],
+        "competition_id": request[16],
+        "competition_name": request[17],
+        "username": None,
+        "first_name": None,
+        "participants": []
+    }
+
+    if len(request) > 18:
+        data["username"] = request[18]
+
+    if len(request) > 19:
+        data["first_name"] = request[19]
+
+    if len(request) > 20 and request[20]:
+        data["participants"] = request[20]
+
+    return data
+
+
+def get_competition_requests_count(competition_id):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT COUNT(*)
+    FROM ArtFlow_bid
+    WHERE competition_id = %s
+    ''', (competition_id,))
+
+    count = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return count
+
+
+def get_competition_requests(competition_id, limit, offset):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
+        return []
+
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0:
+        limit = 8
+
+    if not isinstance(offset, int) or isinstance(offset, bool) or offset < 0:
+        offset = 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT id, telegram_id, city, name_team, number_name, number_genre,
+           number_of_participants, age, performance_time, SFP_supervisor,
+           WhatsApp_number, email, status, create_at, music_file_id,
+           music_file_name, competition_id, competition_name
+    FROM ArtFlow_bid
+    WHERE competition_id = %s
+    ORDER BY create_at DESC, id DESC
+    LIMIT %s OFFSET %s
+    ''', (
+        competition_id,
+        limit,
+        offset
+    ))
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return [
+        competition_request_row_to_dict(request)
+        for request in requests
+    ]
+
+
+def get_competition_request_by_id(competition_id, request_id):
+    if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
+        return None
+
+    if not isinstance(request_id, int) or isinstance(request_id, bool) or request_id <= 0:
+        return None
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT b.id, b.telegram_id, b.city, b.name_team, b.number_name, b.number_genre,
+           b.number_of_participants, b.age, b.performance_time, b.SFP_supervisor,
+           b.WhatsApp_number, b.email, b.status, b.create_at, b.music_file_id,
+           b.music_file_name, b.competition_id, b.competition_name,
+           u.username, u.first_name,
+           COALESCE((
+               SELECT array_agg(p.participant_name ORDER BY p.id)
+               FROM participants p
+               WHERE p.bid_id = b.id
+           ), ARRAY[]::TEXT[]) AS participants
+    FROM ArtFlow_bid b
+    LEFT JOIN users u ON u.telegram_id = b.telegram_id
+    WHERE b.id = %s
+        AND b.competition_id = %s
+    ''', (
+        request_id,
+        competition_id
+    ))
+
+    request = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return competition_request_row_to_dict(request)
+
+
 def search_requests(search_text):
     conn = get_connection()
     cur = conn.cursor()
