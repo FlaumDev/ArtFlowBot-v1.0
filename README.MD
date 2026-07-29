@@ -56,22 +56,16 @@ APPLICATION_RECIPIENT_CHAT_ID=
 
 The organizer must open the bot and press Start at least once before the bot can send a private Telegram message. To find the organizer chat id, ask the organizer to open a trusted Telegram ID bot, for example `@userinfobot`, and copy the numeric user id. For a private chat, this id is the value for `APPLICATION_RECIPIENT_CHAT_ID`.
 
-Required Railway variables for email notifications:
+Required Railway variables for email notifications through Resend HTTPS API:
 
 ```env
 APPLICATION_RECIPIENT_EMAIL=
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM_EMAIL=
-SMTP_USE_SSL=false
-SMTP_USE_STARTTLS=true
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+RESEND_REPLY_TO_EMAIL=
 ```
 
-Use `SMTP_USE_STARTTLS=true` for most providers on port `587`. Use `SMTP_USE_SSL=true` and `SMTP_PORT=465` only when the SMTP provider requires SSL from the start.
-
-To check Telegram notification delivery, set `APPLICATION_RECIPIENT_CHAT_ID`, restart the Railway service, open the bot as the organizer with `/start`, and submit a test application. To check email delivery, set the SMTP variables, restart the Railway service, submit a test application, and verify that the email subject has the format `Новая заявка ArtFlow №<application_id> — <competition_name>`.
+Railway Hobby blocks outgoing SMTP, so production email delivery uses Resend over HTTPS instead of `smtplib`, Gmail SMTP, port `587`, or STARTTLS. To check email delivery, set the Resend variables in the `ArtFlowBot` Railway service, restart the service, run `/test_notifications` as an admin, and verify that the email subject has the format `Новая заявка ArtFlow №<application_id> — <competition_name>`.
 
 ### ⚡ Public Telegram Commands
 The bot supports these public commands:
@@ -170,3 +164,53 @@ Planned features:
 Created by Nikita Flyaum
 
 A personal project focused on backend development, database design, and Telegram bot development.
+## 🔔 Railway Notifications Diagnostics
+
+Application notifications are configured only through environment variables. The local `.env` file is ignored by git, so its values do not appear in Railway after `git push`.
+
+For production, add the variables manually in Railway: `ArtFlowBot` service → `Variables`. Adding these variables to `ArtFlowWeb` does not configure the Telegram bot. After changing Railway Variables, restart or redeploy the `ArtFlowBot` service so the process reads the new values.
+
+Required variables:
+
+```env
+APPLICATION_RECIPIENT_CHAT_ID=
+APPLICATION_RECIPIENT_EMAIL=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+RESEND_REPLY_TO_EMAIL=
+```
+
+Telegram recipient requirements:
+
+- The recipient must open the bot and send `/start` at least once.
+- `APPLICATION_RECIPIENT_CHAT_ID` must be an integer chat id.
+- Do not commit real chat ids, bot tokens, emails, Resend API keys, or database credentials.
+
+Resend email requirements:
+
+- Railway Hobby blocks outgoing SMTP, so email notifications use Resend HTTPS API.
+- `RESEND_API_KEY` is the secret API key from Resend.
+- `RESEND_FROM_EMAIL` must be a verified Resend sender/domain address.
+- `RESEND_REPLY_TO_EMAIL` is optional and is used only as Reply-To.
+- Remove legacy `SMTP_*` variables from the bot service after Resend is confirmed.
+
+Admin diagnostic command:
+
+```text
+/test_notifications
+```
+
+The command is admin-only and is not intended for the public BotFather command list. It sends neutral test messages and does not create an application or write to PostgreSQL.
+
+In Railway Logs, check for these lines:
+
+```text
+Application notifications:
+Telegram: enabled
+Email: enabled, provider=Resend HTTPS
+Application committed, starting notifications: application_id=<id>
+Application notification result: application_id=<id>
+Application test notification result
+```
+
+If a channel is disabled, logs show only missing variable names or safe error types. Passwords, tokens, Resend API keys, and database secrets must never appear in logs.

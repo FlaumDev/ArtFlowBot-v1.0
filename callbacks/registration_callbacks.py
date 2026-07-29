@@ -1,8 +1,13 @@
+import logging
+
 from loader import bot
 from storage import user_data
 from registration import end_registration, performance_time, city, number_of_participants, exit_registration, music_file
 from callbacks.competition_callbacks import get_current_competition
 from application_notifications import send_application_notifications
+
+
+logger = logging.getLogger(__name__)
 
 
 @bot.callback_query_handler(func=lambda callback: (
@@ -67,6 +72,7 @@ def registration_callback_message(callback):
             "genre_1": "Хореография",
             "genre_2": "Вокал",
             "genre_3": "Инструментальный",
+            "genre_4": "ИЗО",
         }
 
         user_data[user_id]["genre"] = genres[callback.data]
@@ -145,7 +151,14 @@ def registration_callback_message(callback):
         conn.commit()
         cur.close()
         conn.close()
-        send_application_notifications(bot, callback.message, bid_id, data)
+        logger.info("Application committed, starting notifications: application_id=%s", bid_id)
+        send_application_notifications(
+            bot,
+            callback.from_user,
+            callback.message.chat.id,
+            bid_id,
+            data
+        )
         end_registration(callback.message)
 
         user_data.pop(callback.message.chat.id, None)

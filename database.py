@@ -527,6 +527,86 @@ def get_all_requests():
 
     return requests
 
+
+def get_competitions_for_requests_export():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute('''
+    SELECT c.id, c.name, COUNT(b.id) AS requests_count
+    FROM competitions c
+    LEFT JOIN ArtFlow_bid b ON b.competition_id = c.id
+    GROUP BY c.id, c.name
+    ORDER BY c.id ASC
+    ''')
+
+    competitions = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return [
+        {
+            "id": competition[0],
+            "name": competition[1],
+            "requests_count": competition[2]
+        }
+        for competition in competitions
+    ]
+
+
+def _requests_for_excel_sql(where_clause=""):
+    return f'''
+    SELECT b.id, b.telegram_id, b.city, b.name_team, b.number_name, b.number_genre,
+           b.number_of_participants, b.age, b.performance_time, b.SFP_supervisor,
+           b.WhatsApp_number, b.email, b.status, b.create_at, b.music_file_id,
+           b.music_file_name, b.competition_id, b.competition_name,
+           NULL AS username, NULL AS first_name,
+           COALESCE(
+               array_agg(p.participant_name ORDER BY p.id)
+               FILTER (WHERE p.participant_name IS NOT NULL),
+               ARRAY[]::TEXT[]
+           ) AS participants
+    FROM ArtFlow_bid b
+    LEFT JOIN participants p ON p.bid_id = b.id
+    {where_clause}
+    GROUP BY b.id, b.telegram_id, b.city, b.name_team, b.number_name, b.number_genre,
+             b.number_of_participants, b.age, b.performance_time, b.SFP_supervisor,
+             b.WhatsApp_number, b.email, b.status, b.create_at, b.music_file_id,
+             b.music_file_name, b.competition_id, b.competition_name
+    ORDER BY b.create_at ASC, b.id ASC
+    '''
+
+
+def get_requests_for_excel(competition_id=None):
+    params = ()
+    where_clause = ""
+
+    if competition_id is not None:
+        if not isinstance(competition_id, int) or isinstance(competition_id, bool) or competition_id <= 0:
+            return []
+
+        where_clause = "WHERE b.competition_id = %s"
+        params = (competition_id,)
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(_requests_for_excel_sql(where_clause), params)
+
+    requests = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return [
+        competition_request_row_to_dict(request)
+        for request in requests
+    ]
+
+
+def get_requests_by_competition_for_export(competition_id):
+    return get_requests_for_excel(competition_id)
 def get_all_telegram_ids():
     conn = get_connection()
     cur = conn.cursor()

@@ -9,6 +9,7 @@ from storage import user_data
 from deep_links import parse_competition_deep_link
 from competition_messages import competition_text
 from database import is_admin, save_user, get_competition_by_id, get_competition_web_data_by_id
+from application_notifications import send_test_notifications, validate_application_notification_config
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ WELCOME_TEXT = '''👋 Добро пожаловать в ArtFlow!
 • Хореография
 • Вокал
 • Инструментальное творчество
+• ИЗО
 
 👇 Выберите интересующий вас раздел в меню ниже:'''
 
@@ -60,6 +62,21 @@ HELP_TEXT = """❓ Помощь по ArtFlow
 
 🌐 Сайт: https://artflowfest.com"""
 
+
+
+
+def format_test_notification_line(label, result, config):
+    if result.get("sent"):
+        return f"{label}: ✅ отправлено"
+
+    if not result.get("configured"):
+        if config.get("missing"):
+            return f"{label}: ❌ " + ", ".join(config.get("missing"))
+
+        if config.get("errors"):
+            return f"{label}: ❌ " + "; ".join(config.get("errors"))
+
+    return f"{label}: ❌ {result.get('error_type') or 'Ошибка'}"
 
 def save_user_safely(message):
     try:
@@ -174,6 +191,27 @@ def help_command(message):
     save_user_safely(message)
     bot.send_message(message.chat.id, HELP_TEXT)
 
+
+
+@bot.message_handler(commands=['test_notifications'])
+def test_notifications(message):
+    if not is_admin(message.chat.id):
+        bot.send_message(
+            message.chat.id,
+            "❌ У вас нет доступа к панели администратора."
+        )
+        return
+
+    config = validate_application_notification_config()
+    result = send_test_notifications(bot)
+
+    bot.send_message(
+        message.chat.id,
+        "🔔 Проверка уведомлений\n\n"
+        + format_test_notification_line("Telegram", result["telegram"], config["telegram"])
+        + "\n"
+        + format_test_notification_line("Email", result["email"], config["email"])
+    )
 
 ADMIN_IDS = [2087517047]
 

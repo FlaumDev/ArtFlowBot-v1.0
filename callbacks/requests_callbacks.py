@@ -1,4 +1,7 @@
+import logging
+from html import escape as html_escape
 from io import BytesIO
+import math
 import re
 from telebot import types
 from openpyxl import Workbook
@@ -6,8 +9,12 @@ from openpyxl.styles import Font, Alignment
 from loader import bot
 from keyboards.user_keyboards import request_navigation
 from keyboards.admin_keyboards import admin_requests_menu_menu, admin_request_navigation, admin_requests_menu, admin_status_menu, admin_search_menu
-from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, get_request_by_id, delete_request, update_request_status, search_request_by_id, search_request_by_email, search_request_by_whatsapp, search_request_by_participant
+from database import get_user_requests, get_participants, get_all_requests, get_all_users_requests, get_request_by_id, delete_request, update_request_status, search_request_by_id, search_request_by_email, search_request_by_whatsapp, search_request_by_participant, get_competitions_for_requests_export, get_requests_for_excel, get_competition_by_id
 from callbacks.admin_callbacks import admin_check
+
+
+logger = logging.getLogger(__name__)
+EXPORT_COMPETITIONS_PER_PAGE = 8
 
 
 def admin_request_text(request):
@@ -92,9 +99,154 @@ def admin_send_found_requests(message, requests, title):
     )
 
 
-def create_requests_excel():
-    requests = get_all_requests()
+def safe_caption_text(value):
+    value = re.sub(r"[\r\n]+", " ", str(value or "")).strip()
 
+    if not value:
+        return "Без названия"
+
+    return value
+
+
+def format_export_competition_button_text(competition):
+    name = safe_caption_text(competition.get("name") or "Без названия")
+    count = competition.get("requests_count") or 0
+    label = f"🏆 {competition.get('id')}. {name} ({count})"
+
+    if len(label) > 60:
+        label = f"{label[:57]}..."
+
+    return label
+
+
+def export_competitions_total_pages(competitions):
+    return max(1, math.ceil(len(competitions) / EXPORT_COMPETITIONS_PER_PAGE))
+
+
+def normalize_export_page(page, competitions):
+    total_pages = export_competitions_total_pages(competitions)
+
+    if not isinstance(page, int) or isinstance(page, bool):
+        page = 1
+
+    if page < 1:
+        page = 1
+
+    if page > total_pages:
+        page = total_pages
+
+    return page, total_pages
+
+
+def admin_export_competitions_menu(competitions, page=1):
+    page, total_pages = normalize_export_page(page, competitions)
+    markup = types.InlineKeyboardMarkup()
+    start = (page - 1) * EXPORT_COMPETITIONS_PER_PAGE
+    end = start + EXPORT_COMPETITIONS_PER_PAGE
+
+    markup.add(
+        types.InlineKeyboardButton(
+            "📚 Все конкурсы",
+            callback_data="admin_export_all"
+        )
+    )
+
+    for competition in competitions[start:end]:
+        markup.add(
+            types.InlineKeyboardButton(
+                format_export_competition_button_text(competition),
+                callback_data=f"admin_export_competition_{competition.get('id')}"
+            )
+        )
+
+    markup.row(
+        types.InlineKeyboardButton(
+            "⬅️",
+            callback_data=f"admin_export_page_{page - 1}" if page > 1 else "admin_export_noop"
+        ),
+        types.InlineKeyboardButton(
+            f"Страница {page}/{total_pages}",
+            callback_data="admin_export_noop"
+        ),
+        types.InlineKeyboardButton(
+            "➡️",
+            callback_data=f"admin_export_page_{page + 1}" if page < total_pages else "admin_export_noop"
+        )
+    )
+
+    markup.add(
+        types.InlineKeyboardButton(
+            "🔙 Назад",
+            callback_data="back_to_admin_info"
+        )
+    )
+
+    return markup
+
+
+def admin_export_competitions_text(competitions, page=1):
+    page, total_pages = normalize_export_page(page, competitions)
+    return f"📄 Выберите конкурс для выгрузки заявок:\n\nСтраница {page}/{total_pages}"
+
+
+def parse_admin_export_competition_callback(callback_data):
+    prefix = "admin_export_competition_"
+
+    if not callback_data.startswith(prefix):
+        return None
+
+    value = callback_data[len(prefix):]
+
+    if not value.isdigit():
+        return None
+
+    competition_id = int(value)
+
+    if competition_id <= 0:
+        return None
+
+    return competition_id
+
+
+def parse_admin_export_page_callback(callback_data):
+    prefix = "admin_export_page_"
+
+    if not callback_data.startswith(prefix):
+        return None
+
+    value = callback_data[len(prefix):]
+
+    if not value.isdigit():
+        return None
+
+    page = int(value)
+
+    if page <= 0:
+        return None
+
+    return page
+
+
+def sanitize_excel_cell(value):
+    if not isinstance(value, str):
+        return value
+
+    stripped = value.lstrip()
+
+    if stripped.startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+
+    return value
+
+
+def requests_excel_filename(competition_id=None):
+    if competition_id is None:
+        return "artflow_requests_all.xlsx"
+
+    return f"artflow_requests_competition_{competition_id}.xlsx"
+
+
+def create_requests_excel(requests, competition_id=None):
     if not requests:
         return None
 
@@ -130,30 +282,29 @@ def create_requests_excel():
         cell.alignment = Alignment(wrap_text=True, vertical="top")
 
     for request in requests:
-        participants = get_participants(request[0])
         participants_text = "\n".join(
-            participant[0]
-            for participant in participants
+            str(sanitize_excel_cell(participant))
+            for participant in (request.get("participants") or [])
         )
 
         sheet.append([
-            request[0],
-            request[16],
-            request[17],
-            request[1],
-            request[2],
-            request[3],
-            request[4],
-            request[5],
-            request[6],
-            request[7],
-            request[8],
-            request[9],
-            request[10],
-            request[11],
-            request[12],
-            request[13],
-            request[15],
+            request.get("id"),
+            request.get("competition_id"),
+            sanitize_excel_cell(request.get("competition_name")),
+            request.get("telegram_id"),
+            sanitize_excel_cell(request.get("city")),
+            sanitize_excel_cell(request.get("name_team")),
+            sanitize_excel_cell(request.get("number_name")),
+            sanitize_excel_cell(request.get("number_genre")),
+            request.get("number_of_participants"),
+            sanitize_excel_cell(request.get("age")),
+            request.get("performance_time"),
+            sanitize_excel_cell(request.get("SFP_supervisor")),
+            sanitize_excel_cell(request.get("WhatsApp_number")),
+            sanitize_excel_cell(request.get("email")),
+            sanitize_excel_cell(request.get("status")),
+            request.get("create_at"),
+            sanitize_excel_cell(request.get("music_file_name")),
             participants_text
         ])
 
@@ -190,10 +341,83 @@ def create_requests_excel():
     excel_file = BytesIO()
     workbook.save(excel_file)
     excel_file.seek(0)
-    excel_file.name = "artflow_requests.xlsx"
+    excel_file.name = requests_excel_filename(competition_id)
 
     return excel_file
 
+
+def safe_competition_name_for_html_message(competition):
+    return html_escape(
+        safe_caption_text(competition.get("title") or competition.get("name")),
+        quote=True
+    )
+
+
+def build_export_caption(requests_count, competition=None):
+    if competition is None:
+        return f"📄 Все заявки ArtFlow\n\n📋 Количество заявок: {requests_count}"
+
+    competition_name = safe_competition_name_for_html_message(competition)
+    return f"📄 Заявки конкурса\n\n🏆 {competition_name}\n📋 Количество заявок: {requests_count}"
+
+
+def empty_export_message(competition=None):
+    if competition is None:
+        return "📋 Заявок пока нет."
+
+    competition_name = safe_competition_name_for_html_message(competition)
+    return f"📋 На конкурс “{competition_name}” пока нет заявок."
+
+def send_requests_excel(callback, competition_id=None):
+    competition = None
+    excel_file = None
+
+    try:
+        if competition_id is not None:
+            competition = get_competition_by_id(f"competition_{competition_id}")
+
+            if not competition:
+                bot.send_message(
+                    callback.message.chat.id,
+                    "❌ Конкурс не найден."
+                )
+                return
+
+        requests = get_requests_for_excel(competition_id)
+
+        if not requests:
+            bot.send_message(
+                callback.message.chat.id,
+                empty_export_message(competition)
+            )
+            return
+
+        excel_file = create_requests_excel(requests, competition_id)
+
+        if not excel_file:
+            bot.send_message(
+                callback.message.chat.id,
+                empty_export_message(competition)
+            )
+            return
+
+        bot.send_document(
+            callback.message.chat.id,
+            excel_file,
+            caption=build_export_caption(len(requests), competition)
+        )
+    except Exception:
+        logger.exception(
+            "Admin requests Excel export failed: competition_id=%s",
+            competition_id
+        )
+        bot.send_message(
+            callback.message.chat.id,
+            "❌ Не удалось создать Excel-файл. Попробуйте позже."
+        )
+    finally:
+        if excel_file is not None:
+            excel_file.close()
 
 def admin_request_func(callback):
     requests = get_all_requests()
@@ -394,11 +618,15 @@ def admin_search_participant(message):
         "admin_delete_request",
         "admin_save_music",
         "admin_change_status",
+        "admin_export_all",
+        "admin_export_noop",
     )
     or callback.data.startswith("request_page_")
     or callback.data.startswith("request_participants_")
     or callback.data.startswith("admin_request_page_")
     or callback.data.startswith("admin_open_request_")
+    or callback.data.startswith("admin_export_competition_")
+    or callback.data.startswith("admin_export_page_")
     or callback.data.startswith("admin_status_")
 ))
 def requests_callback_message(callback):
@@ -528,21 +756,57 @@ def requests_callback_message(callback):
 
 
     elif callback.data == 'admin_choice_request':
-        excel_file = create_requests_excel()
+        competitions = get_competitions_for_requests_export()
 
-        if not excel_file:
+        if not competitions:
             bot.send_message(
                 callback.message.chat.id,
-                "📋 пока нет заявок"
+                "🏆 Конкурсов пока нет"
             )
             return
 
-        bot.send_document(
+        bot.edit_message_text(
+            admin_export_competitions_text(competitions, 1),
             callback.message.chat.id,
-            excel_file,
-            caption="📄 Выгрузка заявок ArtFlow"
+            callback.message.message_id,
+            reply_markup=admin_export_competitions_menu(competitions, 1)
         )
 
+    elif callback.data.startswith("admin_export_page_"):
+        page = parse_admin_export_page_callback(callback.data) or 1
+        competitions = get_competitions_for_requests_export()
+
+        if not competitions:
+            bot.send_message(
+                callback.message.chat.id,
+                "🏆 Конкурсов пока нет"
+            )
+            return
+
+        bot.edit_message_text(
+            admin_export_competitions_text(competitions, page),
+            callback.message.chat.id,
+            callback.message.message_id,
+            reply_markup=admin_export_competitions_menu(competitions, page)
+        )
+
+    elif callback.data == "admin_export_noop":
+        return
+
+    elif callback.data == "admin_export_all":
+        send_requests_excel(callback)
+
+    elif callback.data.startswith("admin_export_competition_"):
+        competition_id = parse_admin_export_competition_callback(callback.data)
+
+        if not competition_id:
+            bot.send_message(
+                callback.message.chat.id,
+                "❌ Не удалось определить конкурс для выгрузки."
+            )
+            return
+
+        send_requests_excel(callback, competition_id)
     elif callback.data == 'admin_search':
 
         bot.edit_message_text("🔎 Выберите вариант поиска заявки",

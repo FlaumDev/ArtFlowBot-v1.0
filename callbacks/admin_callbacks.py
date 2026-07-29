@@ -202,6 +202,7 @@ def admin_callback_message(callback):
         genre1 = 0
         genre2 = 0
         genre3 = 0
+        genre4 = 0
 
         count = all_count()
         part_count = all_participants()
@@ -234,6 +235,8 @@ def admin_callback_message(callback):
                 genre2 += 1
             elif genre.lower() == "инструментальный":
                 genre3 += 1
+            elif genre.lower() == "изо":
+                genre4 += 1
             else:
                 print("Неизвестный жанр:", genre)
 
@@ -259,6 +262,7 @@ def admin_callback_message(callback):
 • Хореография — {genre1}
 • Вокал — {genre2}
 • Инструментальное — {genre3}
+• ИЗО — {genre4}
 
 ━━━━━━━━━━━━━━
 

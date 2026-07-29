@@ -25,6 +25,7 @@ def menu_callback_message(callback):
         • Хореография
         • Вокал
         • Инструментальное творчество
+        • ИЗО
 
         👇 Выберите интересующий вас раздел в меню ниже:''',
                 callback.message.chat.id,
