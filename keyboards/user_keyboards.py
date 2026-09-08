@@ -322,7 +322,18 @@ def genre_menu():
         callback_data = 'genre_4'
     )
 
+    btn5 = types.InlineKeyboardButton(
+        "🎭 Актерское мастерство",
+        callback_data = 'genre_5'
+    )
+
+    btn6 = types.InlineKeyboardButton(
+        "👗 Театр мод",
+        callback_data = 'genre_6'
+    )
+
     markup.row(btn1, btn2)
     markup.row(btn3, btn4)
+    markup.row(btn5, btn6)
 
     return markup

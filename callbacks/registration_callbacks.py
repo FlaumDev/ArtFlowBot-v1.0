@@ -73,6 +73,8 @@ def registration_callback_message(callback):
             "genre_2": "Вокал",
             "genre_3": "Инструментальный",
             "genre_4": "ИЗО",
+            "genre_5": "Актерское мастерство",
+            "genre_6": "Театр мод",
         }
 
         user_data[user_id]["genre"] = genres[callback.data]
