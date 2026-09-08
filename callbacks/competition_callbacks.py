@@ -1052,7 +1052,7 @@ def admin_add_competition_description(message):
 
     msg = bot.send_message(
         message.chat.id,
-        "📄 Введите путь к положению или отправьте - если положения нет:"
+        "📄 Введите ссылку на положение или отправьте - если положения нет:"
     )
     bot.register_next_step_handler(msg, admin_add_competition_rules)
 
@@ -1064,7 +1064,7 @@ def admin_add_competition_rules(message):
     if message.content_type != "text":
         bot.send_message(
             message.chat.id,
-            "❌ Введите путь к положению текстом"
+            "❌ Введите ссылку на положение текстом"
         )
         bot.register_next_step_handler(message, admin_add_competition_rules)
         return
@@ -1272,7 +1272,7 @@ def admin_change_competition_description(message):
 
     msg = bot.send_message(
         message.chat.id,
-        f"Текущее положение:\n{escape(user_data[message.chat.id]['admin_competition'].get('rules_file') or 'Не загружено')}\n\nВведите новый путь к положению или отправьте - чтобы оставить текущее:"
+        f"Текущее положение:\n{escape(user_data[message.chat.id]['admin_competition'].get('rules_file') or 'Не загружено')}\n\nВведите новую ссылку на положение или отправьте - чтобы оставить текущее:"
     )
     bot.register_next_step_handler(msg, admin_change_competition_rules)
 
@@ -1284,7 +1284,7 @@ def admin_change_competition_rules(message):
     if message.content_type != "text":
         bot.send_message(
             message.chat.id,
-            "❌ Введите путь к положению текстом"
+            "❌ Введите ссылку на положение текстом"
         )
         bot.register_next_step_handler(message, admin_change_competition_rules)
         return
@@ -1557,16 +1557,15 @@ def competition_callback_message(callback):
             return
 
         try:
-            with open(rules_file, 'rb') as file:
-                bot.send_document(
-                    callback.message.chat.id,
-                    file,
-                    caption=f'📄 Положение конкурса "{escape(competition.get("title") or "")}"'
-                )
-        except FileNotFoundError:
+            bot.send_document(
+                callback.message.chat.id,
+                rules_file,
+                caption=f'📄 Положение конкурса "{escape(competition.get("title") or "")}"'
+            )
+        except Exception:
             bot.send_message(
                 callback.message.chat.id,
-                "❌ Файл положения не найден"
+                "❌ Не удалось отправить положение по ссылке"
             )
 
 
