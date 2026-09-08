@@ -1556,6 +1556,10 @@ def competition_callback_message(callback):
             )
             return
 
+        if "docs.google.com/document/d/" in rules_file:
+            document_id = rules_file.split("/document/d/", 1)[1].split("/", 1)[0]
+            rules_file = f"https://docs.google.com/document/d/{document_id}/export?format=pdf"
+
         try:
             bot.send_document(
                 callback.message.chat.id,
