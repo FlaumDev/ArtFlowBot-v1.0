@@ -654,7 +654,7 @@ def validate_admin_web_field(chat_id, field, text):
 
         if key == "poster_url" and "drive.google.com/file/d/" in text:
             file_id = text.split("/file/d/", 1)[1].split("/", 1)[0]
-            text = f"https://drive.google.com/uc?export=view&id={file_id}"
+            text = f"https://drive.google.com/thumbnail?id={file_id}&sz=w1600"
 
         return True, text
 
