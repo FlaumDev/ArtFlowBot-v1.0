@@ -1,216 +1,89 @@
-# 🎨 ArtFlow Telegram Bot
+# ArtFlowBot — Telegram-бот для регистрации на конкурсы
 
-A Telegram bot designed for automating registration processes for creative competitions and festivals.
+Бот для проекта ArtFlow. Через него участники подают заявки на творческие конкурсы, а организаторы работают с заявками и управляют информацией о мероприятиях.
 
-The bot allows participants to submit applications, manage their requests, and interact with the competition system through a convenient Telegram interface.
+Бот связан с [сайтом ArtFlow](https://artflowfest.com): человек выбирает конкурс на сайте и переходит в Telegram, где может оформить заявку.
 
-## 🚀 Features
+## Что умеет бот
 
-### 📝 Registration System
-- Step-by-step participant registration
-- Collects all required information:
-  - City
-  - Team / organization name
-  - Performance name
-  - Performance genre
-  - Number of participants
-  - Age category
-  - Performance duration
-  - Supervisor information
-  - Contact details
-  - Email address
+**Для участников**
+- Показывает доступные конкурсы, условия и ответы на частые вопросы.
+- Проводит через регистрацию по шагам: сведения о коллективе, номере, участниках и контактах.
+- Сохраняет заявки в базе данных.
+- Позволяет посмотреть свои заявки.
 
-### 📋 Application Management
-- Saving applications to a database
-- Viewing submitted applications
-- Tracking application status
-- Support for multiple applications per user
+**Для организаторов**
+- Просмотр, поиск и обработка заявок, изменение статусов.
+- Управление конкурсами и разделом FAQ.
+- Выгрузка заявок в Excel.
+- Уведомления о новых заявках в Telegram и по email, если настроены соответствующие каналы.
 
-### 🗄 Database
-- SQLite database integration
-- Separate tables for:
-  - Applications
-  - Participants
-- Relationship between applications and participants using foreign keys
+## Как связан с сайтом
 
-### 🎛 User Interface
-- Interactive Telegram inline keyboards
-- Navigation between sections
-- User-friendly registration flow
-
-### 🔗 ArtFlowWeb Deep Links
-- Supports links from ArtFlowWeb in the format `https://t.me/{BOT_USERNAME}?start=competition_{id}`
-- Opens only existing published competitions
-- Keeps the existing registration flow and saves the selected competition with the application
-
-### 🔔 Application Notifications
-- After a new application is saved, the bot can send the application data to an organizer in Telegram and by email.
-- Notifications are sent only after the database save is successful.
-- Telegram and email notifications are independent: a failure in one channel does not cancel the application or block the other channel.
-
-Required Railway variables for Telegram notifications:
-
-```env
-APPLICATION_RECIPIENT_CHAT_ID=
-```
-
-The organizer must open the bot and press Start at least once before the bot can send a private Telegram message. To find the organizer chat id, ask the organizer to open a trusted Telegram ID bot, for example `@userinfobot`, and copy the numeric user id. For a private chat, this id is the value for `APPLICATION_RECIPIENT_CHAT_ID`.
-
-Required Railway variables for email notifications through Resend HTTPS API:
-
-```env
-APPLICATION_RECIPIENT_EMAIL=
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=
-RESEND_REPLY_TO_EMAIL=
-```
-
-Railway Hobby blocks outgoing SMTP, so production email delivery uses Resend over HTTPS instead of `smtplib`, Gmail SMTP, port `587`, or STARTTLS. To check email delivery, set the Resend variables in the `ArtFlowBot` Railway service, restart the service, run `/test_notifications` as an admin, and verify that the email subject has the format `Новая заявка ArtFlow №<application_id> — <competition_name>`.
-
-### ⚡ Public Telegram Commands
-The bot supports these public commands:
+Для каждого опубликованного конкурса сайт формирует Telegram-ссылку вида:
 
 ```text
-/start - open the main menu
-/competitions - show competitions
-/faq - show FAQ
-/contact - contact the organizer
-/help - show command help
+https://t.me/BOT_USERNAME?start=competition_7
 ```
 
-Deep links such as `/start competition_<id>` continue to open published competitions from ArtFlowWeb.
+Бот проверяет, существует ли такой конкурс и опубликован ли он. Если всё в порядке, открывает его и сохраняет выбор для регистрации.
 
-Commands to add manually in BotFather:
+Сайт и бот используют общую PostgreSQL-базу. Веб-часть проекта находится в репозитории [ArtFlowWeb](https://github.com/FlaumDev/ArtFlowWeb).
 
-```text
-start - открыть главное меню
-competitions - посмотреть конкурсы
-faq - частые вопросы
-contact - связаться с организатором
-help - помощь по боту
-```
+## Технологии
 
----
+Python, pyTelegramBotAPI, PostgreSQL (psycopg2), openpyxl. Для email-уведомлений используется Resend.
 
-## 🛠 Technologies
+## Как запустить локально
 
-- Python 3
-- pyTelegramBotAPI (TeleBot)
-- SQLite
-- Git
-- PyCharm
+Нужны Python 3 и доступ к PostgreSQL.
 
----
+1. Клонировать репозиторий:
 
-## 📂 Project Structure
-ArtFlowBot/
-│
-├── main.py              # Bot initialization and polling
-├── loader.py            # Telegram bot configuration
-├── config.py            # Environment variables and token
-│
-├── database.py          # Database connection and SQL queries
-├── storage.py           # Temporary user data storage
-│
-├── commands.py          # Telegram commands (/start, /info)
-├── callbacks.py         # Inline button handlers
-├── registration.py      # Registration process logic
-├── keyboards.py         # Telegram inline keyboards
-│
-└── ArtFlow.db           # SQLite database
+   ```bash
+   git clone https://github.com/FlaumDev/ArtFlowBot-v1.0.git
+   cd ArtFlowBot-v1.0
+   ```
 
----
+2. Создать окружение и установить зависимости:
 
-## ⚙️ Installation
+   ```bash
+   python -m venv .venv
+   python -m pip install -r requirements.txt
+   ```
 
-Clone the repository:
-git clone https://github.com/your-username/ArtFlowBot.git
+   Перед запуском активируйте виртуальное окружение (в Windows: `.venv\Scripts\activate`).
 
-Install dependencies:
-pip install pyTelegramBotAPI
+3. Скопировать `.env.example` в `.env` и заполнить `TOKEN` и параметры подключения к PostgreSQL (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT`).
 
-Create a config.py file:
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+4. Запустить бот:
 
-Run the bot:
-python main.py
+   ```bash
+   python main.py
+   ```
 
-_---
+При первом запуске приложение создаёт необходимые таблицы. Для совместной работы с ArtFlowWeb требуются и дополнительные поля конкурсов; соответствующая миграция и порядок её применения описаны в [документации](docs/database_migration_plan.md). С существующей базой перед миграциями сделайте резервную копию.
 
-## 🔐_ Security
+## Команды
 
-The Telegram bot token is stored separately from the main code.
+- `/start` — главное меню
+- `/competitions` — список конкурсов
+- `/faq` — частые вопросы
+- `/contact` — контакты организаторов
+- `/help` — справка
 
-For production use, it is recommended to store sensitive data using environment variables.
+Есть отдельные административные действия. Команда `/test_notifications` предназначена для проверки уведомлений администратором.
 
----
+## Где что находится
 
-## 📈 Future Improvements
+- `main.py` — запуск бота;
+- `commands.py` — команды Telegram;
+- `registration.py` — этапы заполнения заявки;
+- `callbacks/` и `keyboards/` — обработчики кнопок и меню;
+- `database.py` — работа с PostgreSQL;
+- `application_notifications.py` — уведомления;
+- `migrations/` — изменения структуры БД.
 
-Planned features:
+Для уведомлений можно указать `APPLICATION_RECIPIENT_CHAT_ID`, `APPLICATION_RECIPIENT_EMAIL` и настройки Resend в переменных окружения. Без них соответствующие каналы не будут настроены. В Railway переменные нужно добавлять в сервис бота отдельно.
 
-- Admin panel for organizers
-- Application approval system
-- Notifications about application status changes
-- File upload system for music tracks
-- Pagination for multiple user applications
-- MySQL/PostgreSQL migration
-- Web dashboard for competition management
-
----
-
-## 👨‍💻 Author
-
-Created by Nikita Flyaum
-
-A personal project focused on backend development, database design, and Telegram bot development.
-## 🔔 Railway Notifications Diagnostics
-
-Application notifications are configured only through environment variables. The local `.env` file is ignored by git, so its values do not appear in Railway after `git push`.
-
-For production, add the variables manually in Railway: `ArtFlowBot` service → `Variables`. Adding these variables to `ArtFlowWeb` does not configure the Telegram bot. After changing Railway Variables, restart or redeploy the `ArtFlowBot` service so the process reads the new values.
-
-Required variables:
-
-```env
-APPLICATION_RECIPIENT_CHAT_ID=
-APPLICATION_RECIPIENT_EMAIL=
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=
-RESEND_REPLY_TO_EMAIL=
-```
-
-Telegram recipient requirements:
-
-- The recipient must open the bot and send `/start` at least once.
-- `APPLICATION_RECIPIENT_CHAT_ID` must be an integer chat id.
-- Do not commit real chat ids, bot tokens, emails, Resend API keys, or database credentials.
-
-Resend email requirements:
-
-- Railway Hobby blocks outgoing SMTP, so email notifications use Resend HTTPS API.
-- `RESEND_API_KEY` is the secret API key from Resend.
-- `RESEND_FROM_EMAIL` must be a verified Resend sender/domain address.
-- `RESEND_REPLY_TO_EMAIL` is optional and is used only as Reply-To.
-- Remove legacy `SMTP_*` variables from the bot service after Resend is confirmed.
-
-Admin diagnostic command:
-
-```text
-/test_notifications
-```
-
-The command is admin-only and is not intended for the public BotFather command list. It sends neutral test messages and does not create an application or write to PostgreSQL.
-
-In Railway Logs, check for these lines:
-
-```text
-Application notifications:
-Telegram: enabled
-Email: enabled, provider=Resend HTTPS
-Application committed, starting notifications: application_id=<id>
-Application notification result: application_id=<id>
-Application test notification result
-```
-
-If a channel is disabled, logs show only missing variable names or safe error types. Passwords, tokens, Resend API keys, and database secrets must never appear in logs.
+Токены, пароли и реальные данные участников в репозиторий добавлять не следует.
